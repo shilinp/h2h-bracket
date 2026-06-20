@@ -2,5 +2,5 @@ package starter
 
 import "embed"
 
-//go:embed public/*
+//go:embed web/dist/*
 var StaticFiles embed.FS
