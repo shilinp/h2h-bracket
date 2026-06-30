@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package h2hbracket;
+
+option go_package = "h2h-bracket/internal/proto;proto";
+
+message Match {
+  int32 match_id = 1;
+  optional int32 team1_id = 2;
+  optional int32 team2_id = 3;
+  optional int32 team1_prev_match_id = 4;
+  optional int32 team2_prev_match_id = 5;
+}
+
+message MatchPosition {
+  int32 round_number = 1;
+  int32 visual_position = 2;
+}
+
+message FetchMatchupsRequest {
+  string username = 1;
+  bool is_special_user = 2;
+}
+
+message FetchMatchupsResponse {
+  repeated Match matches = 1;
+  map<int32, MatchPosition> match_positions = 2; // key: match_id
+  map<int32, int32> predictions = 3; // key: match_id, val: winning_team_id
+  bool is_locked = 4;
+  map<int32, string> team_names = 5; // key: match_id, val: team_name
+  map<int32, int32> master_predictions = 6; // key: match_id, val: winning_team_id
+  optional double accuracy = 7;
+}
+
+message SubmitBracketRequest {
+  string username = 1;
+  map<int32, int32> predictions = 2; // key: match_id, val: winning_team_id
+  bool is_special_user = 3;
+}
+
+message SubmitBracketResponse {
+  string status = 1;
+  FetchMatchupsResponse updated_bracket = 2;
+}
+
+message DeleteBracketRequest {
+  string username = 1;
+}
+
+message DeleteBracketResponse {
+  string status = 1;
+}
+
+message TournamentUploadRequest {
+  string title = 1;
+  string start_time = 2;
+  repeated string teams = 3;
+}
+
+message TournamentUploadResponse {
+  string status = 1;
+  FetchMatchupsResponse updated_bracket = 2;
+}

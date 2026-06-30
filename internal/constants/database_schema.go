@@ -23,15 +23,15 @@ CREATE TABLE IF NOT EXISTS matches (
     team2_id INT NULL,
     winner_id INT NULL,
 
-    next_match_id INT NULL,
-    next_match_slot INT NULL, 
+    team1_prev_match_id INT NULL,
+    team2_prev_match_id INT NULL,
 
     CONSTRAINT fk_tournament FOREIGN KEY (tournament_id) REFERENCES tournaments(tournament_id) ON DELETE CASCADE,
     CONSTRAINT fk_team1 FOREIGN KEY (team1_id) REFERENCES teams(team_id),
     CONSTRAINT fk_team2 FOREIGN KEY (team2_id) REFERENCES teams(team_id),
     CONSTRAINT fk_winner FOREIGN KEY (winner_id) REFERENCES teams(team_id),
-    CONSTRAINT fk_next_match FOREIGN KEY (next_match_id) REFERENCES matches(match_id),
-    CONSTRAINT chk_slot CHECK (next_match_slot IN (1, 2)),
+    CONSTRAINT fk_team1_prev_match FOREIGN KEY (team1_prev_match_id) REFERENCES matches(match_id) ON DELETE SET NULL,
+    CONSTRAINT fk_team2_prev_match FOREIGN KEY (team2_prev_match_id) REFERENCES matches(match_id) ON DELETE SET NULL,
     CONSTRAINT uniq_match_pos UNIQUE (tournament_id, round_number, match_position)
 );
 
@@ -44,12 +44,15 @@ CREATE TABLE IF NOT EXISTS user_brackets (
     user_bracket_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL,
     tournament_id INT NOT NULL,
+    is_master BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_user_tournament FOREIGN KEY (tournament_id) REFERENCES tournaments(tournament_id) ON DELETE CASCADE,
     CONSTRAINT uniq_user_tournament UNIQUE (user_id, tournament_id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_brackets_master_tournament ON user_brackets(tournament_id) WHERE is_master;
 
 CREATE TABLE IF NOT EXISTS match_predictions (
     prediction_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

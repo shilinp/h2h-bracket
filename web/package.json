@@ -15,7 +15,12 @@
     "@types/node": "^24.12.3",
     "svelte": "^5.55.5",
     "svelte-check": "^4.4.8",
+    "ts-proto": "^2.11.9",
     "typescript": "~6.0.2",
     "vite": "^8.0.12"
+  },
+  "dependencies": {
+    "protobufjs": "^8.6.5",
+    "protobufjs-cli": "^2.5.6"
   }
 }

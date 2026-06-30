@@ -1,5 +1,5 @@
 package constants
 
-const PlayerAdminUsername = "playeradmin"
+const SpecialUsername = "special"
 
-const TournamentAdminUsername = "tournamentadmin"
+// SpecialUsername is the hardcoded identity used for the special/master bracket user.
