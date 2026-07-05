@@ -29,7 +29,6 @@ func (h *Handler) handleDeleteBracket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Remove tournament lookups; map deletion strictly to user_id[cite: 7]
 	tag, err := h.DB.Exec(ctx, `
 		DELETE FROM match_predictions mp
 		USING users u

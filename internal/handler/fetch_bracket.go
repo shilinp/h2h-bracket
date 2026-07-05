@@ -54,13 +54,11 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 		MasterPredictions: make(map[int32]int32),
 	}
 
-	// Fetch lock state straight from global_settings[cite: 7]
 	err := h.DB.QueryRow(ctx, "SELECT is_locked FROM global_settings LIMIT 1").Scan(&resp.IsLocked)
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
 
-	// Retrieve match structure without tournament requirements[cite: 7]
 	rows, err := h.DB.Query(ctx, `
 		SELECT match_id, round_number, visual_position, team1_id, team2_id, team1_prev_match_id, team2_prev_match_id 
 		FROM matches ORDER BY round_number, visual_position`)
@@ -90,7 +88,7 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 
 		resp.MatchPositions[mID] = &pb.MatchPosition{
 			RoundNumber:    int32(roundNumber),
-			VisualPosition: int32(visualPosition), // Updated from match_position[cite: 6]
+			VisualPosition: int32(visualPosition),
 		}
 	}
 
@@ -111,11 +109,10 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 		err = h.DB.QueryRow(ctx, `
 			INSERT INTO users (username) VALUES ($1) 
 			ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username 
-			RETURNING user_id`, username).Scan(&userID) //[cite: 7]
+			RETURNING user_id`, username).Scan(&userID)
 
 		if err == nil {
 			var byeTeamID int
-			// Map to direct is_bye lookup instead of checking for name string[cite: 7]
 			errBye := h.DB.QueryRow(ctx, "SELECT team_id FROM teams WHERE is_bye = TRUE LIMIT 1").Scan(&byeTeamID)
 			if errBye == nil {
 				for _, match := range resp.Matches {
@@ -130,7 +127,7 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 						_, _ = h.DB.Exec(ctx, `
 							INSERT INTO match_predictions (user_id, match_id, predicted_winner_id)
 							VALUES ($1, $2, $3)
-							ON CONFLICT (user_id, match_id) DO NOTHING`, //[cite: 7]
+							ON CONFLICT (user_id, match_id) DO NOTHING`,
 							userID, match.GetMatchId(), winnerID)
 					}
 				}
@@ -138,7 +135,7 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 
 			pRows, _ := h.DB.Query(ctx, `
 				SELECT match_id, predicted_winner_id 
-				FROM match_predictions WHERE user_id = $1`, userID) //[cite: 7]
+				FROM match_predictions WHERE user_id = $1`, userID)
 			defer pRows.Close()
 
 			for pRows.Next() {
@@ -158,7 +155,7 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 	if err == nil {
 		mRows, _ := h.DB.Query(ctx, `
 			SELECT match_id, predicted_winner_id 
-			FROM match_predictions WHERE user_id = $1`, masterID) //[cite: 7]
+			FROM match_predictions WHERE user_id = $1`, masterID)
 		defer mRows.Close()
 
 		for mRows.Next() {
@@ -180,7 +177,7 @@ func (h *Handler) fetchActiveTournamentBracket(ctx context.Context, username str
 					SUM(CASE WHEN up.predicted_winner_id = ap.predicted_winner_id THEN 1 ELSE 0 END) as correct
 				FROM match_predictions up
 				JOIN match_predictions ap ON up.match_id = ap.match_id
-				WHERE up.user_id = $1 AND ap.user_id = $2`, //[cite: 7]
+				WHERE up.user_id = $1 AND ap.user_id = $2`,
 				userID, masterID).Scan(&total, &correct)
 
 			if err == nil && total > 0 {
