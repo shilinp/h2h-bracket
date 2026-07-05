@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "outputDirectory": "web/dist",
+  "rewrites": [
+    { 
+      "source": "/api/(.*)", 
+      "destination": "/api/index.go" 
+    },
+    { 
+      "source": "/special", 
+      "destination": "/web/dist/special.html" 
+    },
+    { 
+      "source": "/upload", 
+      "destination": "/web/dist/upload.html" 
+    },
+    { 
+      "source": "/(.*)", 
+      "destination": "/web/dist/$1" 
+    }
+  ]
+}

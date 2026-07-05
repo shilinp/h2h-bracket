@@ -1,11 +1,7 @@
 package main
 
 import (
-	"net/http"
-
-	starter "h2h-bracket"
 	"h2h-bracket/internal/constants"
-	"h2h-bracket/internal/handler"
 	"log"
 	"time"
 
@@ -46,16 +42,4 @@ func main() {
 		log.Fatalf("failed to create tables: %v", err)
 	}
 	log.Println("Database tables and indexes created successfully!")
-
-	mux := http.NewServeMux()
-
-	h := handler.New(starter.StaticFiles, connPool)
-	h.RegisterRoutes(mux)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
-	http.ListenAndServe(":"+port, mux)
 }
