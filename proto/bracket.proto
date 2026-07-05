@@ -17,12 +17,12 @@ message MatchPosition {
   int32 visual_position = 2;
 }
 
-message FetchMatchupsRequest {
+message FetchBracketRequest {
   string username = 1;
   bool is_special_user = 2;
 }
 
-message FetchMatchupsResponse {
+message FetchBracketResponse {
   repeated Match matches = 1;
   map<int32, MatchPosition> match_positions = 2; // key: match_id
   map<int32, int32> predictions = 3; // key: match_id, val: winning_team_id
@@ -40,7 +40,7 @@ message SubmitBracketRequest {
 
 message SubmitBracketResponse {
   string status = 1;
-  FetchMatchupsResponse updated_bracket = 2;
+  FetchBracketResponse updated_bracket = 2;
 }
 
 message DeleteBracketRequest {
@@ -51,13 +51,11 @@ message DeleteBracketResponse {
   string status = 1;
 }
 
-message TournamentUploadRequest {
-  string title = 1;
-  string start_time = 2;
-  repeated string teams = 3;
+message SubmitTeamsRequest {
+  repeated string teams = 1;
 }
 
-message TournamentUploadResponse {
+message SubmitTeamsResponse {
   string status = 1;
-  FetchMatchupsResponse updated_bracket = 2;
+  FetchBracketResponse updated_bracket = 2;
 }

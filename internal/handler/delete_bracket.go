@@ -29,19 +29,12 @@ func (h *Handler) handleDeleteBracket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve the active tournament ID
-	var tournamentID int
-	err = h.DB.QueryRow(ctx, "SELECT tournament_id FROM tournaments LIMIT 1").Scan(&tournamentID)
-	if err != nil {
-		http.Error(w, "No active tournament found", http.StatusBadRequest)
-		return
-	}
-
+	// Remove tournament lookups; map deletion strictly to user_id[cite: 7]
 	tag, err := h.DB.Exec(ctx, `
-		DELETE FROM user_brackets ub
+		DELETE FROM match_predictions mp
 		USING users u
-		WHERE ub.user_id = u.user_id AND u.username = $1 AND ub.tournament_id = $2`,
-		username, tournamentID)
+		WHERE mp.user_id = u.user_id AND u.username = $1`,
+		username)
 
 	if err != nil {
 		http.Error(w, "Failed to delete bracket", http.StatusInternalServerError)
@@ -55,6 +48,7 @@ func (h *Handler) handleDeleteBracket(w http.ResponseWriter, r *http.Request) {
 
 	resp := &pb.DeleteBracketResponse{Status: "Bracket deleted successfully"}
 	w.Header().Set("Content-Type", "application/x-protobuf")
+
 	data, err := proto.Marshal(resp)
 	if err != nil {
 		http.Error(w, "Failed to serialize response", http.StatusInternalServerError)

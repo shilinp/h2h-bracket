@@ -5,7 +5,7 @@
   import MatchPicker from "./components/MatchPicker.svelte";
   import AccuracyPanel from "./components/AccuracyPanel.svelte";
   import {
-    FetchMatchupsResponse,
+    FetchBracketResponse,
     SubmitBracketRequest,
     SubmitBracketResponse,
     DeleteBracketRequest,
@@ -104,7 +104,7 @@
   let currentMatch = $derived.by(() => playableMatches[0] ?? null);
 
   // Helper to hydrate bracket state from either initial fetch or submit response
-  function applyBracketResponse(response: FetchMatchupsResponse) {
+  function applyBracketResponse(response: FetchBracketResponse) {
     state.bracket.matches = response.matches ?? [];
     state.bracket.matchPositions = response.matchPositions ?? {};
     state.bracket.isLocked = response.isLocked;
@@ -149,7 +149,7 @@
       if (!res.ok) throw new Error("Network error fetching bracket data");
 
       const responseBytes = new Uint8Array(await res.arrayBuffer());
-      const response = FetchMatchupsResponse.decode(responseBytes);
+      const response = FetchBracketResponse.decode(responseBytes);
       applyBracketResponse(response);
     } catch (err) {
       console.error("Unable to load bracket payload", err);

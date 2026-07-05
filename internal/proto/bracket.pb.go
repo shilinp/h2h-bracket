@@ -149,7 +149,7 @@ func (x *MatchPosition) GetVisualPosition() int32 {
 	return 0
 }
 
-type FetchMatchupsRequest struct {
+type FetchBracketRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	IsSpecialUser bool                   `protobuf:"varint,2,opt,name=is_special_user,json=isSpecialUser,proto3" json:"is_special_user,omitempty"`
@@ -157,20 +157,20 @@ type FetchMatchupsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *FetchMatchupsRequest) Reset() {
-	*x = FetchMatchupsRequest{}
+func (x *FetchBracketRequest) Reset() {
+	*x = FetchBracketRequest{}
 	mi := &file_proto_bracket_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FetchMatchupsRequest) String() string {
+func (x *FetchBracketRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FetchMatchupsRequest) ProtoMessage() {}
+func (*FetchBracketRequest) ProtoMessage() {}
 
-func (x *FetchMatchupsRequest) ProtoReflect() protoreflect.Message {
+func (x *FetchBracketRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_bracket_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -182,26 +182,26 @@ func (x *FetchMatchupsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FetchMatchupsRequest.ProtoReflect.Descriptor instead.
-func (*FetchMatchupsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use FetchBracketRequest.ProtoReflect.Descriptor instead.
+func (*FetchBracketRequest) Descriptor() ([]byte, []int) {
 	return file_proto_bracket_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *FetchMatchupsRequest) GetUsername() string {
+func (x *FetchBracketRequest) GetUsername() string {
 	if x != nil {
 		return x.Username
 	}
 	return ""
 }
 
-func (x *FetchMatchupsRequest) GetIsSpecialUser() bool {
+func (x *FetchBracketRequest) GetIsSpecialUser() bool {
 	if x != nil {
 		return x.IsSpecialUser
 	}
 	return false
 }
 
-type FetchMatchupsResponse struct {
+type FetchBracketResponse struct {
 	state             protoimpl.MessageState   `protogen:"open.v1"`
 	Matches           []*Match                 `protobuf:"bytes,1,rep,name=matches,proto3" json:"matches,omitempty"`
 	MatchPositions    map[int32]*MatchPosition `protobuf:"bytes,2,rep,name=match_positions,json=matchPositions,proto3" json:"match_positions,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // key: match_id
@@ -214,20 +214,20 @@ type FetchMatchupsResponse struct {
 	sizeCache         protoimpl.SizeCache
 }
 
-func (x *FetchMatchupsResponse) Reset() {
-	*x = FetchMatchupsResponse{}
+func (x *FetchBracketResponse) Reset() {
+	*x = FetchBracketResponse{}
 	mi := &file_proto_bracket_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FetchMatchupsResponse) String() string {
+func (x *FetchBracketResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FetchMatchupsResponse) ProtoMessage() {}
+func (*FetchBracketResponse) ProtoMessage() {}
 
-func (x *FetchMatchupsResponse) ProtoReflect() protoreflect.Message {
+func (x *FetchBracketResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_bracket_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -239,54 +239,54 @@ func (x *FetchMatchupsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FetchMatchupsResponse.ProtoReflect.Descriptor instead.
-func (*FetchMatchupsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use FetchBracketResponse.ProtoReflect.Descriptor instead.
+func (*FetchBracketResponse) Descriptor() ([]byte, []int) {
 	return file_proto_bracket_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *FetchMatchupsResponse) GetMatches() []*Match {
+func (x *FetchBracketResponse) GetMatches() []*Match {
 	if x != nil {
 		return x.Matches
 	}
 	return nil
 }
 
-func (x *FetchMatchupsResponse) GetMatchPositions() map[int32]*MatchPosition {
+func (x *FetchBracketResponse) GetMatchPositions() map[int32]*MatchPosition {
 	if x != nil {
 		return x.MatchPositions
 	}
 	return nil
 }
 
-func (x *FetchMatchupsResponse) GetPredictions() map[int32]int32 {
+func (x *FetchBracketResponse) GetPredictions() map[int32]int32 {
 	if x != nil {
 		return x.Predictions
 	}
 	return nil
 }
 
-func (x *FetchMatchupsResponse) GetIsLocked() bool {
+func (x *FetchBracketResponse) GetIsLocked() bool {
 	if x != nil {
 		return x.IsLocked
 	}
 	return false
 }
 
-func (x *FetchMatchupsResponse) GetTeamNames() map[int32]string {
+func (x *FetchBracketResponse) GetTeamNames() map[int32]string {
 	if x != nil {
 		return x.TeamNames
 	}
 	return nil
 }
 
-func (x *FetchMatchupsResponse) GetMasterPredictions() map[int32]int32 {
+func (x *FetchBracketResponse) GetMasterPredictions() map[int32]int32 {
 	if x != nil {
 		return x.MasterPredictions
 	}
 	return nil
 }
 
-func (x *FetchMatchupsResponse) GetAccuracy() float64 {
+func (x *FetchBracketResponse) GetAccuracy() float64 {
 	if x != nil && x.Accuracy != nil {
 		return *x.Accuracy
 	}
@@ -356,7 +356,7 @@ func (x *SubmitBracketRequest) GetIsSpecialUser() bool {
 type SubmitBracketResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Status         string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	UpdatedBracket *FetchMatchupsResponse `protobuf:"bytes,2,opt,name=updated_bracket,json=updatedBracket,proto3" json:"updated_bracket,omitempty"`
+	UpdatedBracket *FetchBracketResponse  `protobuf:"bytes,2,opt,name=updated_bracket,json=updatedBracket,proto3" json:"updated_bracket,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -398,7 +398,7 @@ func (x *SubmitBracketResponse) GetStatus() string {
 	return ""
 }
 
-func (x *SubmitBracketResponse) GetUpdatedBracket() *FetchMatchupsResponse {
+func (x *SubmitBracketResponse) GetUpdatedBracket() *FetchBracketResponse {
 	if x != nil {
 		return x.UpdatedBracket
 	}
@@ -493,29 +493,27 @@ func (x *DeleteBracketResponse) GetStatus() string {
 	return ""
 }
 
-type TournamentUploadRequest struct {
+type SubmitTeamsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	StartTime     string                 `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	Teams         []string               `protobuf:"bytes,3,rep,name=teams,proto3" json:"teams,omitempty"`
+	Teams         []string               `protobuf:"bytes,1,rep,name=teams,proto3" json:"teams,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TournamentUploadRequest) Reset() {
-	*x = TournamentUploadRequest{}
+func (x *SubmitTeamsRequest) Reset() {
+	*x = SubmitTeamsRequest{}
 	mi := &file_proto_bracket_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TournamentUploadRequest) String() string {
+func (x *SubmitTeamsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TournamentUploadRequest) ProtoMessage() {}
+func (*SubmitTeamsRequest) ProtoMessage() {}
 
-func (x *TournamentUploadRequest) ProtoReflect() protoreflect.Message {
+func (x *SubmitTeamsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_bracket_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -527,54 +525,40 @@ func (x *TournamentUploadRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TournamentUploadRequest.ProtoReflect.Descriptor instead.
-func (*TournamentUploadRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SubmitTeamsRequest.ProtoReflect.Descriptor instead.
+func (*SubmitTeamsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_bracket_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *TournamentUploadRequest) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *TournamentUploadRequest) GetStartTime() string {
-	if x != nil {
-		return x.StartTime
-	}
-	return ""
-}
-
-func (x *TournamentUploadRequest) GetTeams() []string {
+func (x *SubmitTeamsRequest) GetTeams() []string {
 	if x != nil {
 		return x.Teams
 	}
 	return nil
 }
 
-type TournamentUploadResponse struct {
+type SubmitTeamsResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Status         string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	UpdatedBracket *FetchMatchupsResponse `protobuf:"bytes,2,opt,name=updated_bracket,json=updatedBracket,proto3" json:"updated_bracket,omitempty"`
+	UpdatedBracket *FetchBracketResponse  `protobuf:"bytes,2,opt,name=updated_bracket,json=updatedBracket,proto3" json:"updated_bracket,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *TournamentUploadResponse) Reset() {
-	*x = TournamentUploadResponse{}
+func (x *SubmitTeamsResponse) Reset() {
+	*x = SubmitTeamsResponse{}
 	mi := &file_proto_bracket_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TournamentUploadResponse) String() string {
+func (x *SubmitTeamsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TournamentUploadResponse) ProtoMessage() {}
+func (*SubmitTeamsResponse) ProtoMessage() {}
 
-func (x *TournamentUploadResponse) ProtoReflect() protoreflect.Message {
+func (x *SubmitTeamsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_bracket_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -586,19 +570,19 @@ func (x *TournamentUploadResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TournamentUploadResponse.ProtoReflect.Descriptor instead.
-func (*TournamentUploadResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use SubmitTeamsResponse.ProtoReflect.Descriptor instead.
+func (*SubmitTeamsResponse) Descriptor() ([]byte, []int) {
 	return file_proto_bracket_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *TournamentUploadResponse) GetStatus() string {
+func (x *SubmitTeamsResponse) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *TournamentUploadResponse) GetUpdatedBracket() *FetchMatchupsResponse {
+func (x *SubmitTeamsResponse) GetUpdatedBracket() *FetchBracketResponse {
 	if x != nil {
 		return x.UpdatedBracket
 	}
@@ -623,18 +607,18 @@ const file_proto_bracket_proto_rawDesc = "" +
 	"\x14_team2_prev_match_id\"[\n" +
 	"\rMatchPosition\x12!\n" +
 	"\fround_number\x18\x01 \x01(\x05R\vroundNumber\x12'\n" +
-	"\x0fvisual_position\x18\x02 \x01(\x05R\x0evisualPosition\"Z\n" +
-	"\x14FetchMatchupsRequest\x12\x1a\n" +
+	"\x0fvisual_position\x18\x02 \x01(\x05R\x0evisualPosition\"Y\n" +
+	"\x13FetchBracketRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12&\n" +
-	"\x0fis_special_user\x18\x02 \x01(\bR\risSpecialUser\"\xa1\x06\n" +
-	"\x15FetchMatchupsResponse\x12+\n" +
-	"\amatches\x18\x01 \x03(\v2\x11.h2hbracket.MatchR\amatches\x12^\n" +
-	"\x0fmatch_positions\x18\x02 \x03(\v25.h2hbracket.FetchMatchupsResponse.MatchPositionsEntryR\x0ematchPositions\x12T\n" +
-	"\vpredictions\x18\x03 \x03(\v22.h2hbracket.FetchMatchupsResponse.PredictionsEntryR\vpredictions\x12\x1b\n" +
-	"\tis_locked\x18\x04 \x01(\bR\bisLocked\x12O\n" +
+	"\x0fis_special_user\x18\x02 \x01(\bR\risSpecialUser\"\x9c\x06\n" +
+	"\x14FetchBracketResponse\x12+\n" +
+	"\amatches\x18\x01 \x03(\v2\x11.h2hbracket.MatchR\amatches\x12]\n" +
+	"\x0fmatch_positions\x18\x02 \x03(\v24.h2hbracket.FetchBracketResponse.MatchPositionsEntryR\x0ematchPositions\x12S\n" +
+	"\vpredictions\x18\x03 \x03(\v21.h2hbracket.FetchBracketResponse.PredictionsEntryR\vpredictions\x12\x1b\n" +
+	"\tis_locked\x18\x04 \x01(\bR\bisLocked\x12N\n" +
 	"\n" +
-	"team_names\x18\x05 \x03(\v20.h2hbracket.FetchMatchupsResponse.TeamNamesEntryR\tteamNames\x12g\n" +
-	"\x12master_predictions\x18\x06 \x03(\v28.h2hbracket.FetchMatchupsResponse.MasterPredictionsEntryR\x11masterPredictions\x12\x1f\n" +
+	"team_names\x18\x05 \x03(\v2/.h2hbracket.FetchBracketResponse.TeamNamesEntryR\tteamNames\x12f\n" +
+	"\x12master_predictions\x18\x06 \x03(\v27.h2hbracket.FetchBracketResponse.MasterPredictionsEntryR\x11masterPredictions\x12\x1f\n" +
 	"\baccuracy\x18\a \x01(\x01H\x00R\baccuracy\x88\x01\x01\x1a\\\n" +
 	"\x13MatchPositionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12/\n" +
@@ -655,22 +639,19 @@ const file_proto_bracket_proto_rawDesc = "" +
 	"\x0fis_special_user\x18\x03 \x01(\bR\risSpecialUser\x1a>\n" +
 	"\x10PredictionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"{\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"z\n" +
 	"\x15SubmitBracketResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\x12J\n" +
-	"\x0fupdated_bracket\x18\x02 \x01(\v2!.h2hbracket.FetchMatchupsResponseR\x0eupdatedBracket\"2\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12I\n" +
+	"\x0fupdated_bracket\x18\x02 \x01(\v2 .h2hbracket.FetchBracketResponseR\x0eupdatedBracket\"2\n" +
 	"\x14DeleteBracketRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\"/\n" +
 	"\x15DeleteBracketResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\"d\n" +
-	"\x17TournamentUploadRequest\x12\x14\n" +
-	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1d\n" +
-	"\n" +
-	"start_time\x18\x02 \x01(\tR\tstartTime\x12\x14\n" +
-	"\x05teams\x18\x03 \x03(\tR\x05teams\"~\n" +
-	"\x18TournamentUploadResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\x12J\n" +
-	"\x0fupdated_bracket\x18\x02 \x01(\v2!.h2hbracket.FetchMatchupsResponseR\x0eupdatedBracketB\"Z h2h-bracket/internal/proto;protob\x06proto3"
+	"\x06status\x18\x01 \x01(\tR\x06status\"*\n" +
+	"\x12SubmitTeamsRequest\x12\x14\n" +
+	"\x05teams\x18\x01 \x03(\tR\x05teams\"x\n" +
+	"\x13SubmitTeamsResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12I\n" +
+	"\x0fupdated_bracket\x18\x02 \x01(\v2 .h2hbracket.FetchBracketResponseR\x0eupdatedBracketB\"Z h2h-bracket/internal/proto;protob\x06proto3"
 
 var (
 	file_proto_bracket_proto_rawDescOnce sync.Once
@@ -686,32 +667,32 @@ func file_proto_bracket_proto_rawDescGZIP() []byte {
 
 var file_proto_bracket_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_proto_bracket_proto_goTypes = []any{
-	(*Match)(nil),                    // 0: h2hbracket.Match
-	(*MatchPosition)(nil),            // 1: h2hbracket.MatchPosition
-	(*FetchMatchupsRequest)(nil),     // 2: h2hbracket.FetchMatchupsRequest
-	(*FetchMatchupsResponse)(nil),    // 3: h2hbracket.FetchMatchupsResponse
-	(*SubmitBracketRequest)(nil),     // 4: h2hbracket.SubmitBracketRequest
-	(*SubmitBracketResponse)(nil),    // 5: h2hbracket.SubmitBracketResponse
-	(*DeleteBracketRequest)(nil),     // 6: h2hbracket.DeleteBracketRequest
-	(*DeleteBracketResponse)(nil),    // 7: h2hbracket.DeleteBracketResponse
-	(*TournamentUploadRequest)(nil),  // 8: h2hbracket.TournamentUploadRequest
-	(*TournamentUploadResponse)(nil), // 9: h2hbracket.TournamentUploadResponse
-	nil,                              // 10: h2hbracket.FetchMatchupsResponse.MatchPositionsEntry
-	nil,                              // 11: h2hbracket.FetchMatchupsResponse.PredictionsEntry
-	nil,                              // 12: h2hbracket.FetchMatchupsResponse.TeamNamesEntry
-	nil,                              // 13: h2hbracket.FetchMatchupsResponse.MasterPredictionsEntry
-	nil,                              // 14: h2hbracket.SubmitBracketRequest.PredictionsEntry
+	(*Match)(nil),                 // 0: h2hbracket.Match
+	(*MatchPosition)(nil),         // 1: h2hbracket.MatchPosition
+	(*FetchBracketRequest)(nil),   // 2: h2hbracket.FetchBracketRequest
+	(*FetchBracketResponse)(nil),  // 3: h2hbracket.FetchBracketResponse
+	(*SubmitBracketRequest)(nil),  // 4: h2hbracket.SubmitBracketRequest
+	(*SubmitBracketResponse)(nil), // 5: h2hbracket.SubmitBracketResponse
+	(*DeleteBracketRequest)(nil),  // 6: h2hbracket.DeleteBracketRequest
+	(*DeleteBracketResponse)(nil), // 7: h2hbracket.DeleteBracketResponse
+	(*SubmitTeamsRequest)(nil),    // 8: h2hbracket.SubmitTeamsRequest
+	(*SubmitTeamsResponse)(nil),   // 9: h2hbracket.SubmitTeamsResponse
+	nil,                           // 10: h2hbracket.FetchBracketResponse.MatchPositionsEntry
+	nil,                           // 11: h2hbracket.FetchBracketResponse.PredictionsEntry
+	nil,                           // 12: h2hbracket.FetchBracketResponse.TeamNamesEntry
+	nil,                           // 13: h2hbracket.FetchBracketResponse.MasterPredictionsEntry
+	nil,                           // 14: h2hbracket.SubmitBracketRequest.PredictionsEntry
 }
 var file_proto_bracket_proto_depIdxs = []int32{
-	0,  // 0: h2hbracket.FetchMatchupsResponse.matches:type_name -> h2hbracket.Match
-	10, // 1: h2hbracket.FetchMatchupsResponse.match_positions:type_name -> h2hbracket.FetchMatchupsResponse.MatchPositionsEntry
-	11, // 2: h2hbracket.FetchMatchupsResponse.predictions:type_name -> h2hbracket.FetchMatchupsResponse.PredictionsEntry
-	12, // 3: h2hbracket.FetchMatchupsResponse.team_names:type_name -> h2hbracket.FetchMatchupsResponse.TeamNamesEntry
-	13, // 4: h2hbracket.FetchMatchupsResponse.master_predictions:type_name -> h2hbracket.FetchMatchupsResponse.MasterPredictionsEntry
+	0,  // 0: h2hbracket.FetchBracketResponse.matches:type_name -> h2hbracket.Match
+	10, // 1: h2hbracket.FetchBracketResponse.match_positions:type_name -> h2hbracket.FetchBracketResponse.MatchPositionsEntry
+	11, // 2: h2hbracket.FetchBracketResponse.predictions:type_name -> h2hbracket.FetchBracketResponse.PredictionsEntry
+	12, // 3: h2hbracket.FetchBracketResponse.team_names:type_name -> h2hbracket.FetchBracketResponse.TeamNamesEntry
+	13, // 4: h2hbracket.FetchBracketResponse.master_predictions:type_name -> h2hbracket.FetchBracketResponse.MasterPredictionsEntry
 	14, // 5: h2hbracket.SubmitBracketRequest.predictions:type_name -> h2hbracket.SubmitBracketRequest.PredictionsEntry
-	3,  // 6: h2hbracket.SubmitBracketResponse.updated_bracket:type_name -> h2hbracket.FetchMatchupsResponse
-	3,  // 7: h2hbracket.TournamentUploadResponse.updated_bracket:type_name -> h2hbracket.FetchMatchupsResponse
-	1,  // 8: h2hbracket.FetchMatchupsResponse.MatchPositionsEntry.value:type_name -> h2hbracket.MatchPosition
+	3,  // 6: h2hbracket.SubmitBracketResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
+	3,  // 7: h2hbracket.SubmitTeamsResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
+	1,  // 8: h2hbracket.FetchBracketResponse.MatchPositionsEntry.value:type_name -> h2hbracket.MatchPosition
 	9,  // [9:9] is the sub-list for method output_type
 	9,  // [9:9] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name

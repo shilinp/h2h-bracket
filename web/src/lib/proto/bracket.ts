@@ -22,12 +22,12 @@ export interface MatchPosition {
   visualPosition: number;
 }
 
-export interface FetchMatchupsRequest {
+export interface FetchBracketRequest {
   username: string;
   isSpecialUser: boolean;
 }
 
-export interface FetchMatchupsResponse {
+export interface FetchBracketResponse {
   matches: Match[];
   /** key: match_id */
   matchPositions: { [key: number]: MatchPosition };
@@ -41,22 +41,22 @@ export interface FetchMatchupsResponse {
   accuracy?: number | undefined;
 }
 
-export interface FetchMatchupsResponse_MatchPositionsEntry {
+export interface FetchBracketResponse_MatchPositionsEntry {
   key: number;
   value: MatchPosition | undefined;
 }
 
-export interface FetchMatchupsResponse_PredictionsEntry {
+export interface FetchBracketResponse_PredictionsEntry {
   key: number;
   value: number;
 }
 
-export interface FetchMatchupsResponse_TeamNamesEntry {
+export interface FetchBracketResponse_TeamNamesEntry {
   key: number;
   value: string;
 }
 
-export interface FetchMatchupsResponse_MasterPredictionsEntry {
+export interface FetchBracketResponse_MasterPredictionsEntry {
   key: number;
   value: number;
 }
@@ -75,7 +75,7 @@ export interface SubmitBracketRequest_PredictionsEntry {
 
 export interface SubmitBracketResponse {
   status: string;
-  updatedBracket: FetchMatchupsResponse | undefined;
+  updatedBracket: FetchBracketResponse | undefined;
 }
 
 export interface DeleteBracketRequest {
@@ -86,15 +86,13 @@ export interface DeleteBracketResponse {
   status: string;
 }
 
-export interface TournamentUploadRequest {
-  title: string;
-  startTime: string;
+export interface SubmitTeamsRequest {
   teams: string[];
 }
 
-export interface TournamentUploadResponse {
+export interface SubmitTeamsResponse {
   status: string;
-  updatedBracket: FetchMatchupsResponse | undefined;
+  updatedBracket: FetchBracketResponse | undefined;
 }
 
 function createBaseMatch(): Match {
@@ -331,12 +329,12 @@ export const MatchPosition: MessageFns<MatchPosition> = {
   },
 };
 
-function createBaseFetchMatchupsRequest(): FetchMatchupsRequest {
+function createBaseFetchBracketRequest(): FetchBracketRequest {
   return { username: "", isSpecialUser: false };
 }
 
-export const FetchMatchupsRequest: MessageFns<FetchMatchupsRequest> = {
-  encode(message: FetchMatchupsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const FetchBracketRequest: MessageFns<FetchBracketRequest> = {
+  encode(message: FetchBracketRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.username !== "") {
       writer.uint32(10).string(message.username);
     }
@@ -346,10 +344,10 @@ export const FetchMatchupsRequest: MessageFns<FetchMatchupsRequest> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsRequest();
+    const message = createBaseFetchBracketRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -378,7 +376,7 @@ export const FetchMatchupsRequest: MessageFns<FetchMatchupsRequest> = {
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsRequest {
+  fromJSON(object: any): FetchBracketRequest {
     return {
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       isSpecialUser: isSet(object.isSpecialUser)
@@ -389,7 +387,7 @@ export const FetchMatchupsRequest: MessageFns<FetchMatchupsRequest> = {
     };
   },
 
-  toJSON(message: FetchMatchupsRequest): unknown {
+  toJSON(message: FetchBracketRequest): unknown {
     const obj: any = {};
     if (message.username !== "") {
       obj.username = message.username;
@@ -400,18 +398,18 @@ export const FetchMatchupsRequest: MessageFns<FetchMatchupsRequest> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsRequest>, I>>(base?: I): FetchMatchupsRequest {
-    return FetchMatchupsRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<FetchBracketRequest>, I>>(base?: I): FetchBracketRequest {
+    return FetchBracketRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsRequest>, I>>(object: I): FetchMatchupsRequest {
-    const message = createBaseFetchMatchupsRequest();
+  fromPartial<I extends Exact<DeepPartial<FetchBracketRequest>, I>>(object: I): FetchBracketRequest {
+    const message = createBaseFetchBracketRequest();
     message.username = object.username ?? "";
     message.isSpecialUser = object.isSpecialUser ?? false;
     return message;
   },
 };
 
-function createBaseFetchMatchupsResponse(): FetchMatchupsResponse {
+function createBaseFetchBracketResponse(): FetchBracketResponse {
   return {
     matches: [],
     matchPositions: {},
@@ -423,25 +421,25 @@ function createBaseFetchMatchupsResponse(): FetchMatchupsResponse {
   };
 }
 
-export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
-  encode(message: FetchMatchupsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const FetchBracketResponse: MessageFns<FetchBracketResponse> = {
+  encode(message: FetchBracketResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.matches) {
       Match.encode(v!, writer.uint32(10).fork()).join();
     }
     globalThis.Object.entries(message.matchPositions).forEach(([key, value]: [string, MatchPosition]) => {
-      FetchMatchupsResponse_MatchPositionsEntry.encode({ key: key as any, value }, writer.uint32(18).fork()).join();
+      FetchBracketResponse_MatchPositionsEntry.encode({ key: key as any, value }, writer.uint32(18).fork()).join();
     });
     globalThis.Object.entries(message.predictions).forEach(([key, value]: [string, number]) => {
-      FetchMatchupsResponse_PredictionsEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
+      FetchBracketResponse_PredictionsEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
     });
     if (message.isLocked !== false) {
       writer.uint32(32).bool(message.isLocked);
     }
     globalThis.Object.entries(message.teamNames).forEach(([key, value]: [string, string]) => {
-      FetchMatchupsResponse_TeamNamesEntry.encode({ key: key as any, value }, writer.uint32(42).fork()).join();
+      FetchBracketResponse_TeamNamesEntry.encode({ key: key as any, value }, writer.uint32(42).fork()).join();
     });
     globalThis.Object.entries(message.masterPredictions).forEach(([key, value]: [string, number]) => {
-      FetchMatchupsResponse_MasterPredictionsEntry.encode({ key: key as any, value }, writer.uint32(50).fork()).join();
+      FetchBracketResponse_MasterPredictionsEntry.encode({ key: key as any, value }, writer.uint32(50).fork()).join();
     });
     if (message.accuracy !== undefined) {
       writer.uint32(57).double(message.accuracy);
@@ -449,10 +447,10 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsResponse();
+    const message = createBaseFetchBracketResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -469,7 +467,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
             break;
           }
 
-          const entry2 = FetchMatchupsResponse_MatchPositionsEntry.decode(reader, reader.uint32());
+          const entry2 = FetchBracketResponse_MatchPositionsEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.matchPositions[entry2.key] = entry2.value;
           }
@@ -480,7 +478,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
             break;
           }
 
-          const entry3 = FetchMatchupsResponse_PredictionsEntry.decode(reader, reader.uint32());
+          const entry3 = FetchBracketResponse_PredictionsEntry.decode(reader, reader.uint32());
           if (entry3.value !== undefined) {
             message.predictions[entry3.key] = entry3.value;
           }
@@ -499,7 +497,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
             break;
           }
 
-          const entry5 = FetchMatchupsResponse_TeamNamesEntry.decode(reader, reader.uint32());
+          const entry5 = FetchBracketResponse_TeamNamesEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
             message.teamNames[entry5.key] = entry5.value;
           }
@@ -510,7 +508,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
             break;
           }
 
-          const entry6 = FetchMatchupsResponse_MasterPredictionsEntry.decode(reader, reader.uint32());
+          const entry6 = FetchBracketResponse_MasterPredictionsEntry.decode(reader, reader.uint32());
           if (entry6.value !== undefined) {
             message.masterPredictions[entry6.key] = entry6.value;
           }
@@ -533,7 +531,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsResponse {
+  fromJSON(object: any): FetchBracketResponse {
     return {
       matches: globalThis.Array.isArray(object?.matches) ? object.matches.map((e: any) => Match.fromJSON(e)) : [],
       matchPositions: isObject(object.matchPositions)
@@ -605,7 +603,7 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
     };
   },
 
-  toJSON(message: FetchMatchupsResponse): unknown {
+  toJSON(message: FetchBracketResponse): unknown {
     const obj: any = {};
     if (message.matches?.length) {
       obj.matches = message.matches.map((e) => Match.toJSON(e));
@@ -655,11 +653,11 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsResponse>, I>>(base?: I): FetchMatchupsResponse {
-    return FetchMatchupsResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<FetchBracketResponse>, I>>(base?: I): FetchBracketResponse {
+    return FetchBracketResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsResponse>, I>>(object: I): FetchMatchupsResponse {
-    const message = createBaseFetchMatchupsResponse();
+  fromPartial<I extends Exact<DeepPartial<FetchBracketResponse>, I>>(object: I): FetchBracketResponse {
+    const message = createBaseFetchBracketResponse();
     message.matches = object.matches?.map((e) => Match.fromPartial(e)) || [];
     message.matchPositions = (globalThis.Object.entries(object.matchPositions ?? {}) as [string, MatchPosition][])
       .reduce((acc: { [key: number]: MatchPosition }, [key, value]: [string, MatchPosition]) => {
@@ -699,12 +697,12 @@ export const FetchMatchupsResponse: MessageFns<FetchMatchupsResponse> = {
   },
 };
 
-function createBaseFetchMatchupsResponse_MatchPositionsEntry(): FetchMatchupsResponse_MatchPositionsEntry {
+function createBaseFetchBracketResponse_MatchPositionsEntry(): FetchBracketResponse_MatchPositionsEntry {
   return { key: 0, value: undefined };
 }
 
-export const FetchMatchupsResponse_MatchPositionsEntry: MessageFns<FetchMatchupsResponse_MatchPositionsEntry> = {
-  encode(message: FetchMatchupsResponse_MatchPositionsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const FetchBracketResponse_MatchPositionsEntry: MessageFns<FetchBracketResponse_MatchPositionsEntry> = {
+  encode(message: FetchBracketResponse_MatchPositionsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.key !== 0) {
       writer.uint32(8).int32(message.key);
     }
@@ -714,10 +712,10 @@ export const FetchMatchupsResponse_MatchPositionsEntry: MessageFns<FetchMatchups
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsResponse_MatchPositionsEntry {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketResponse_MatchPositionsEntry {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsResponse_MatchPositionsEntry();
+    const message = createBaseFetchBracketResponse_MatchPositionsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -746,14 +744,14 @@ export const FetchMatchupsResponse_MatchPositionsEntry: MessageFns<FetchMatchups
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsResponse_MatchPositionsEntry {
+  fromJSON(object: any): FetchBracketResponse_MatchPositionsEntry {
     return {
       key: isSet(object.key) ? globalThis.Number(object.key) : 0,
       value: isSet(object.value) ? MatchPosition.fromJSON(object.value) : undefined,
     };
   },
 
-  toJSON(message: FetchMatchupsResponse_MatchPositionsEntry): unknown {
+  toJSON(message: FetchBracketResponse_MatchPositionsEntry): unknown {
     const obj: any = {};
     if (message.key !== 0) {
       obj.key = Math.round(message.key);
@@ -764,15 +762,15 @@ export const FetchMatchupsResponse_MatchPositionsEntry: MessageFns<FetchMatchups
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsResponse_MatchPositionsEntry>, I>>(
+  create<I extends Exact<DeepPartial<FetchBracketResponse_MatchPositionsEntry>, I>>(
     base?: I,
-  ): FetchMatchupsResponse_MatchPositionsEntry {
-    return FetchMatchupsResponse_MatchPositionsEntry.fromPartial(base ?? ({} as any));
+  ): FetchBracketResponse_MatchPositionsEntry {
+    return FetchBracketResponse_MatchPositionsEntry.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsResponse_MatchPositionsEntry>, I>>(
+  fromPartial<I extends Exact<DeepPartial<FetchBracketResponse_MatchPositionsEntry>, I>>(
     object: I,
-  ): FetchMatchupsResponse_MatchPositionsEntry {
-    const message = createBaseFetchMatchupsResponse_MatchPositionsEntry();
+  ): FetchBracketResponse_MatchPositionsEntry {
+    const message = createBaseFetchBracketResponse_MatchPositionsEntry();
     message.key = object.key ?? 0;
     message.value = (object.value !== undefined && object.value !== null)
       ? MatchPosition.fromPartial(object.value)
@@ -781,12 +779,12 @@ export const FetchMatchupsResponse_MatchPositionsEntry: MessageFns<FetchMatchups
   },
 };
 
-function createBaseFetchMatchupsResponse_PredictionsEntry(): FetchMatchupsResponse_PredictionsEntry {
+function createBaseFetchBracketResponse_PredictionsEntry(): FetchBracketResponse_PredictionsEntry {
   return { key: 0, value: 0 };
 }
 
-export const FetchMatchupsResponse_PredictionsEntry: MessageFns<FetchMatchupsResponse_PredictionsEntry> = {
-  encode(message: FetchMatchupsResponse_PredictionsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const FetchBracketResponse_PredictionsEntry: MessageFns<FetchBracketResponse_PredictionsEntry> = {
+  encode(message: FetchBracketResponse_PredictionsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.key !== 0) {
       writer.uint32(8).int32(message.key);
     }
@@ -796,10 +794,10 @@ export const FetchMatchupsResponse_PredictionsEntry: MessageFns<FetchMatchupsRes
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsResponse_PredictionsEntry {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketResponse_PredictionsEntry {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsResponse_PredictionsEntry();
+    const message = createBaseFetchBracketResponse_PredictionsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -828,14 +826,14 @@ export const FetchMatchupsResponse_PredictionsEntry: MessageFns<FetchMatchupsRes
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsResponse_PredictionsEntry {
+  fromJSON(object: any): FetchBracketResponse_PredictionsEntry {
     return {
       key: isSet(object.key) ? globalThis.Number(object.key) : 0,
       value: isSet(object.value) ? globalThis.Number(object.value) : 0,
     };
   },
 
-  toJSON(message: FetchMatchupsResponse_PredictionsEntry): unknown {
+  toJSON(message: FetchBracketResponse_PredictionsEntry): unknown {
     const obj: any = {};
     if (message.key !== 0) {
       obj.key = Math.round(message.key);
@@ -846,27 +844,27 @@ export const FetchMatchupsResponse_PredictionsEntry: MessageFns<FetchMatchupsRes
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsResponse_PredictionsEntry>, I>>(
+  create<I extends Exact<DeepPartial<FetchBracketResponse_PredictionsEntry>, I>>(
     base?: I,
-  ): FetchMatchupsResponse_PredictionsEntry {
-    return FetchMatchupsResponse_PredictionsEntry.fromPartial(base ?? ({} as any));
+  ): FetchBracketResponse_PredictionsEntry {
+    return FetchBracketResponse_PredictionsEntry.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsResponse_PredictionsEntry>, I>>(
+  fromPartial<I extends Exact<DeepPartial<FetchBracketResponse_PredictionsEntry>, I>>(
     object: I,
-  ): FetchMatchupsResponse_PredictionsEntry {
-    const message = createBaseFetchMatchupsResponse_PredictionsEntry();
+  ): FetchBracketResponse_PredictionsEntry {
+    const message = createBaseFetchBracketResponse_PredictionsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? 0;
     return message;
   },
 };
 
-function createBaseFetchMatchupsResponse_TeamNamesEntry(): FetchMatchupsResponse_TeamNamesEntry {
+function createBaseFetchBracketResponse_TeamNamesEntry(): FetchBracketResponse_TeamNamesEntry {
   return { key: 0, value: "" };
 }
 
-export const FetchMatchupsResponse_TeamNamesEntry: MessageFns<FetchMatchupsResponse_TeamNamesEntry> = {
-  encode(message: FetchMatchupsResponse_TeamNamesEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const FetchBracketResponse_TeamNamesEntry: MessageFns<FetchBracketResponse_TeamNamesEntry> = {
+  encode(message: FetchBracketResponse_TeamNamesEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.key !== 0) {
       writer.uint32(8).int32(message.key);
     }
@@ -876,10 +874,10 @@ export const FetchMatchupsResponse_TeamNamesEntry: MessageFns<FetchMatchupsRespo
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsResponse_TeamNamesEntry {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketResponse_TeamNamesEntry {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsResponse_TeamNamesEntry();
+    const message = createBaseFetchBracketResponse_TeamNamesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -908,14 +906,14 @@ export const FetchMatchupsResponse_TeamNamesEntry: MessageFns<FetchMatchupsRespo
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsResponse_TeamNamesEntry {
+  fromJSON(object: any): FetchBracketResponse_TeamNamesEntry {
     return {
       key: isSet(object.key) ? globalThis.Number(object.key) : 0,
       value: isSet(object.value) ? globalThis.String(object.value) : "",
     };
   },
 
-  toJSON(message: FetchMatchupsResponse_TeamNamesEntry): unknown {
+  toJSON(message: FetchBracketResponse_TeamNamesEntry): unknown {
     const obj: any = {};
     if (message.key !== 0) {
       obj.key = Math.round(message.key);
@@ -926,28 +924,28 @@ export const FetchMatchupsResponse_TeamNamesEntry: MessageFns<FetchMatchupsRespo
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsResponse_TeamNamesEntry>, I>>(
+  create<I extends Exact<DeepPartial<FetchBracketResponse_TeamNamesEntry>, I>>(
     base?: I,
-  ): FetchMatchupsResponse_TeamNamesEntry {
-    return FetchMatchupsResponse_TeamNamesEntry.fromPartial(base ?? ({} as any));
+  ): FetchBracketResponse_TeamNamesEntry {
+    return FetchBracketResponse_TeamNamesEntry.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsResponse_TeamNamesEntry>, I>>(
+  fromPartial<I extends Exact<DeepPartial<FetchBracketResponse_TeamNamesEntry>, I>>(
     object: I,
-  ): FetchMatchupsResponse_TeamNamesEntry {
-    const message = createBaseFetchMatchupsResponse_TeamNamesEntry();
+  ): FetchBracketResponse_TeamNamesEntry {
+    const message = createBaseFetchBracketResponse_TeamNamesEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? "";
     return message;
   },
 };
 
-function createBaseFetchMatchupsResponse_MasterPredictionsEntry(): FetchMatchupsResponse_MasterPredictionsEntry {
+function createBaseFetchBracketResponse_MasterPredictionsEntry(): FetchBracketResponse_MasterPredictionsEntry {
   return { key: 0, value: 0 };
 }
 
-export const FetchMatchupsResponse_MasterPredictionsEntry: MessageFns<FetchMatchupsResponse_MasterPredictionsEntry> = {
+export const FetchBracketResponse_MasterPredictionsEntry: MessageFns<FetchBracketResponse_MasterPredictionsEntry> = {
   encode(
-    message: FetchMatchupsResponse_MasterPredictionsEntry,
+    message: FetchBracketResponse_MasterPredictionsEntry,
     writer: BinaryWriter = new BinaryWriter(),
   ): BinaryWriter {
     if (message.key !== 0) {
@@ -959,10 +957,10 @@ export const FetchMatchupsResponse_MasterPredictionsEntry: MessageFns<FetchMatch
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): FetchMatchupsResponse_MasterPredictionsEntry {
+  decode(input: BinaryReader | Uint8Array, length?: number): FetchBracketResponse_MasterPredictionsEntry {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseFetchMatchupsResponse_MasterPredictionsEntry();
+    const message = createBaseFetchBracketResponse_MasterPredictionsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -991,14 +989,14 @@ export const FetchMatchupsResponse_MasterPredictionsEntry: MessageFns<FetchMatch
     return message;
   },
 
-  fromJSON(object: any): FetchMatchupsResponse_MasterPredictionsEntry {
+  fromJSON(object: any): FetchBracketResponse_MasterPredictionsEntry {
     return {
       key: isSet(object.key) ? globalThis.Number(object.key) : 0,
       value: isSet(object.value) ? globalThis.Number(object.value) : 0,
     };
   },
 
-  toJSON(message: FetchMatchupsResponse_MasterPredictionsEntry): unknown {
+  toJSON(message: FetchBracketResponse_MasterPredictionsEntry): unknown {
     const obj: any = {};
     if (message.key !== 0) {
       obj.key = Math.round(message.key);
@@ -1009,15 +1007,15 @@ export const FetchMatchupsResponse_MasterPredictionsEntry: MessageFns<FetchMatch
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<FetchMatchupsResponse_MasterPredictionsEntry>, I>>(
+  create<I extends Exact<DeepPartial<FetchBracketResponse_MasterPredictionsEntry>, I>>(
     base?: I,
-  ): FetchMatchupsResponse_MasterPredictionsEntry {
-    return FetchMatchupsResponse_MasterPredictionsEntry.fromPartial(base ?? ({} as any));
+  ): FetchBracketResponse_MasterPredictionsEntry {
+    return FetchBracketResponse_MasterPredictionsEntry.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<FetchMatchupsResponse_MasterPredictionsEntry>, I>>(
+  fromPartial<I extends Exact<DeepPartial<FetchBracketResponse_MasterPredictionsEntry>, I>>(
     object: I,
-  ): FetchMatchupsResponse_MasterPredictionsEntry {
-    const message = createBaseFetchMatchupsResponse_MasterPredictionsEntry();
+  ): FetchBracketResponse_MasterPredictionsEntry {
+    const message = createBaseFetchBracketResponse_MasterPredictionsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? 0;
     return message;
@@ -1235,7 +1233,7 @@ export const SubmitBracketResponse: MessageFns<SubmitBracketResponse> = {
       writer.uint32(10).string(message.status);
     }
     if (message.updatedBracket !== undefined) {
-      FetchMatchupsResponse.encode(message.updatedBracket, writer.uint32(18).fork()).join();
+      FetchBracketResponse.encode(message.updatedBracket, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1260,7 +1258,7 @@ export const SubmitBracketResponse: MessageFns<SubmitBracketResponse> = {
             break;
           }
 
-          message.updatedBracket = FetchMatchupsResponse.decode(reader, reader.uint32());
+          message.updatedBracket = FetchBracketResponse.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -1276,9 +1274,9 @@ export const SubmitBracketResponse: MessageFns<SubmitBracketResponse> = {
     return {
       status: isSet(object.status) ? globalThis.String(object.status) : "",
       updatedBracket: isSet(object.updatedBracket)
-        ? FetchMatchupsResponse.fromJSON(object.updatedBracket)
+        ? FetchBracketResponse.fromJSON(object.updatedBracket)
         : isSet(object.updated_bracket)
-        ? FetchMatchupsResponse.fromJSON(object.updated_bracket)
+        ? FetchBracketResponse.fromJSON(object.updated_bracket)
         : undefined,
     };
   },
@@ -1289,7 +1287,7 @@ export const SubmitBracketResponse: MessageFns<SubmitBracketResponse> = {
       obj.status = message.status;
     }
     if (message.updatedBracket !== undefined) {
-      obj.updatedBracket = FetchMatchupsResponse.toJSON(message.updatedBracket);
+      obj.updatedBracket = FetchBracketResponse.toJSON(message.updatedBracket);
     }
     return obj;
   },
@@ -1301,7 +1299,7 @@ export const SubmitBracketResponse: MessageFns<SubmitBracketResponse> = {
     const message = createBaseSubmitBracketResponse();
     message.status = object.status ?? "";
     message.updatedBracket = (object.updatedBracket !== undefined && object.updatedBracket !== null)
-      ? FetchMatchupsResponse.fromPartial(object.updatedBracket)
+      ? FetchBracketResponse.fromPartial(object.updatedBracket)
       : undefined;
     return message;
   },
@@ -1423,49 +1421,27 @@ export const DeleteBracketResponse: MessageFns<DeleteBracketResponse> = {
   },
 };
 
-function createBaseTournamentUploadRequest(): TournamentUploadRequest {
-  return { title: "", startTime: "", teams: [] };
+function createBaseSubmitTeamsRequest(): SubmitTeamsRequest {
+  return { teams: [] };
 }
 
-export const TournamentUploadRequest: MessageFns<TournamentUploadRequest> = {
-  encode(message: TournamentUploadRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.title !== "") {
-      writer.uint32(10).string(message.title);
-    }
-    if (message.startTime !== "") {
-      writer.uint32(18).string(message.startTime);
-    }
+export const SubmitTeamsRequest: MessageFns<SubmitTeamsRequest> = {
+  encode(message: SubmitTeamsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.teams) {
-      writer.uint32(26).string(v!);
+      writer.uint32(10).string(v!);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): TournamentUploadRequest {
+  decode(input: BinaryReader | Uint8Array, length?: number): SubmitTeamsRequest {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseTournamentUploadRequest();
+    const message = createBaseSubmitTeamsRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
           if (tag !== 10) {
-            break;
-          }
-
-          message.title = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.startTime = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
             break;
           }
 
@@ -1481,63 +1457,47 @@ export const TournamentUploadRequest: MessageFns<TournamentUploadRequest> = {
     return message;
   },
 
-  fromJSON(object: any): TournamentUploadRequest {
-    return {
-      title: isSet(object.title) ? globalThis.String(object.title) : "",
-      startTime: isSet(object.startTime)
-        ? globalThis.String(object.startTime)
-        : isSet(object.start_time)
-        ? globalThis.String(object.start_time)
-        : "",
-      teams: globalThis.Array.isArray(object?.teams) ? object.teams.map((e: any) => globalThis.String(e)) : [],
-    };
+  fromJSON(object: any): SubmitTeamsRequest {
+    return { teams: globalThis.Array.isArray(object?.teams) ? object.teams.map((e: any) => globalThis.String(e)) : [] };
   },
 
-  toJSON(message: TournamentUploadRequest): unknown {
+  toJSON(message: SubmitTeamsRequest): unknown {
     const obj: any = {};
-    if (message.title !== "") {
-      obj.title = message.title;
-    }
-    if (message.startTime !== "") {
-      obj.startTime = message.startTime;
-    }
     if (message.teams?.length) {
       obj.teams = message.teams;
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<TournamentUploadRequest>, I>>(base?: I): TournamentUploadRequest {
-    return TournamentUploadRequest.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<SubmitTeamsRequest>, I>>(base?: I): SubmitTeamsRequest {
+    return SubmitTeamsRequest.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<TournamentUploadRequest>, I>>(object: I): TournamentUploadRequest {
-    const message = createBaseTournamentUploadRequest();
-    message.title = object.title ?? "";
-    message.startTime = object.startTime ?? "";
+  fromPartial<I extends Exact<DeepPartial<SubmitTeamsRequest>, I>>(object: I): SubmitTeamsRequest {
+    const message = createBaseSubmitTeamsRequest();
     message.teams = object.teams?.map((e) => e) || [];
     return message;
   },
 };
 
-function createBaseTournamentUploadResponse(): TournamentUploadResponse {
+function createBaseSubmitTeamsResponse(): SubmitTeamsResponse {
   return { status: "", updatedBracket: undefined };
 }
 
-export const TournamentUploadResponse: MessageFns<TournamentUploadResponse> = {
-  encode(message: TournamentUploadResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const SubmitTeamsResponse: MessageFns<SubmitTeamsResponse> = {
+  encode(message: SubmitTeamsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.status !== "") {
       writer.uint32(10).string(message.status);
     }
     if (message.updatedBracket !== undefined) {
-      FetchMatchupsResponse.encode(message.updatedBracket, writer.uint32(18).fork()).join();
+      FetchBracketResponse.encode(message.updatedBracket, writer.uint32(18).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): TournamentUploadResponse {
+  decode(input: BinaryReader | Uint8Array, length?: number): SubmitTeamsResponse {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseTournamentUploadResponse();
+    const message = createBaseSubmitTeamsResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1554,7 +1514,7 @@ export const TournamentUploadResponse: MessageFns<TournamentUploadResponse> = {
             break;
           }
 
-          message.updatedBracket = FetchMatchupsResponse.decode(reader, reader.uint32());
+          message.updatedBracket = FetchBracketResponse.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -1566,36 +1526,36 @@ export const TournamentUploadResponse: MessageFns<TournamentUploadResponse> = {
     return message;
   },
 
-  fromJSON(object: any): TournamentUploadResponse {
+  fromJSON(object: any): SubmitTeamsResponse {
     return {
       status: isSet(object.status) ? globalThis.String(object.status) : "",
       updatedBracket: isSet(object.updatedBracket)
-        ? FetchMatchupsResponse.fromJSON(object.updatedBracket)
+        ? FetchBracketResponse.fromJSON(object.updatedBracket)
         : isSet(object.updated_bracket)
-        ? FetchMatchupsResponse.fromJSON(object.updated_bracket)
+        ? FetchBracketResponse.fromJSON(object.updated_bracket)
         : undefined,
     };
   },
 
-  toJSON(message: TournamentUploadResponse): unknown {
+  toJSON(message: SubmitTeamsResponse): unknown {
     const obj: any = {};
     if (message.status !== "") {
       obj.status = message.status;
     }
     if (message.updatedBracket !== undefined) {
-      obj.updatedBracket = FetchMatchupsResponse.toJSON(message.updatedBracket);
+      obj.updatedBracket = FetchBracketResponse.toJSON(message.updatedBracket);
     }
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<TournamentUploadResponse>, I>>(base?: I): TournamentUploadResponse {
-    return TournamentUploadResponse.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<SubmitTeamsResponse>, I>>(base?: I): SubmitTeamsResponse {
+    return SubmitTeamsResponse.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<TournamentUploadResponse>, I>>(object: I): TournamentUploadResponse {
-    const message = createBaseTournamentUploadResponse();
+  fromPartial<I extends Exact<DeepPartial<SubmitTeamsResponse>, I>>(object: I): SubmitTeamsResponse {
+    const message = createBaseSubmitTeamsResponse();
     message.status = object.status ?? "";
     message.updatedBracket = (object.updatedBracket !== undefined && object.updatedBracket !== null)
-      ? FetchMatchupsResponse.fromPartial(object.updatedBracket)
+      ? FetchBracketResponse.fromPartial(object.updatedBracket)
       : undefined;
     return message;
   },

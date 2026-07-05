@@ -38,25 +38,17 @@ func (h *Handler) handleSubmitBracket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tournamentID int
-	err = h.DB.QueryRow(ctx, "SELECT tournament_id FROM tournaments LIMIT 1").Scan(&tournamentID)
-	if err != nil {
-		http.Error(w, "No active tournament found", http.StatusBadRequest)
-		return
-	}
-
 	isMaster := isSpecialUser || username == constants.SpecialUsername
 	if !isMaster {
-		var masterExists bool
-		h.DB.QueryRow(ctx, `
-			SELECT EXISTS(
-				SELECT 1 FROM user_brackets ub
-				JOIN users u ON u.user_id = ub.user_id
-				WHERE ub.tournament_id = $1 AND (ub.is_master = TRUE OR u.username = $2)
-			)
-		`, tournamentID, constants.SpecialUsername).Scan(&masterExists)
+		var isLocked bool
+		// Utilize the global_settings table[cite: 7]
+		err = h.DB.QueryRow(ctx, "SELECT is_locked FROM global_settings LIMIT 1").Scan(&isLocked)
+		if err != nil && err != pgx.ErrNoRows {
+			http.Error(w, "Failed to check lock status", http.StatusInternalServerError)
+			return
+		}
 
-		if masterExists {
+		if isLocked {
 			http.Error(w, "Submissions are locked. The special bracket has been finalized.", http.StatusForbidden)
 			return
 		}
@@ -73,35 +65,25 @@ func (h *Handler) handleSubmitBracket(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow(ctx, `
 		INSERT INTO users (username) VALUES ($1) 
 		ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username 
-		RETURNING user_id`, username).Scan(&userID)
+		RETURNING user_id`, username).Scan(&userID) //[cite: 7]
 	if err != nil {
 		http.Error(w, "Failed to resolve user", http.StatusInternalServerError)
 		return
 	}
 
-	var userBracketID int
-	err = tx.QueryRow(ctx, `
-		INSERT INTO user_brackets (user_id, tournament_id, is_master) VALUES ($1, $2, $3)
-		ON CONFLICT (user_id, tournament_id) DO UPDATE SET is_master = user_brackets.is_master OR EXCLUDED.is_master
-		RETURNING user_bracket_id`, userID, tournamentID, isMaster).Scan(&userBracketID)
-	if err != nil {
-		http.Error(w, "Failed to resolve bracket", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = tx.Exec(ctx, "DELETE FROM match_predictions WHERE user_bracket_id = $1", userBracketID)
+	// Submitting overwrites based purely on user_id context[cite: 7]
+	_, err = tx.Exec(ctx, "DELETE FROM match_predictions WHERE user_id = $1", userID)
 	if err != nil {
 		http.Error(w, "Failed to clear old predictions", http.StatusInternalServerError)
 		return
 	}
 
 	batch := &pgx.Batch{}
-	// UPDATE: Iterate directly over the map
 	for matchID, winnerID := range req.GetPredictions() {
 		batch.Queue(`
-			INSERT INTO match_predictions (user_bracket_id, match_id, predicted_winner_id) 
-			VALUES ($1, $2, $3)`,
-			userBracketID, int(matchID), int(winnerID))
+			INSERT INTO match_predictions (user_id, match_id, predicted_winner_id) 
+			VALUES ($1, $2, $3)`, //[cite: 7]
+			userID, int(matchID), int(winnerID))
 	}
 
 	br := tx.SendBatch(ctx, batch)
@@ -109,6 +91,12 @@ func (h *Handler) handleSubmitBracket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("batch insert failed: %v", err)
 		http.Error(w, "Failed to save predictions", http.StatusInternalServerError)
 		return
+	}
+
+	// Triggering lock status natively based on master submissions[cite: 7]
+	if isMaster {
+		_, _ = tx.Exec(ctx, "DELETE FROM global_settings")
+		_, _ = tx.Exec(ctx, "INSERT INTO global_settings (is_locked) VALUES (TRUE)")
 	}
 
 	if err := tx.Commit(ctx); err != nil {

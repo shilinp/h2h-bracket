@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
@@ -13,5 +14,4 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
 )

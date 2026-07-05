@@ -15,8 +15,8 @@ func New(db *pgxpool.Pool) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/bracket", h.handleGetTournament)
+	mux.HandleFunc("GET /api/bracket", h.handleFetchBracket)
 	mux.HandleFunc("POST /api/bracket", h.handleSubmitBracket)
 	mux.HandleFunc("DELETE /api/bracket", h.handleDeleteBracket)
-	mux.HandleFunc("POST /api/tournament", h.handleUploadTournament)
+	mux.HandleFunc("POST /api/teams", h.handleSubmitTeams)
 }

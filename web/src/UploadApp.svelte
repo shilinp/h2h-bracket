@@ -1,7 +1,7 @@
 <script lang="ts">
+    import type { SubmitTeamsRequest } from "./lib/proto/bracket";
+
     interface UploadState {
-        title: string;
-        startTime: string;
         teams: string[];
         teamInput: string;
         isSubmitting: boolean;
@@ -9,8 +9,6 @@
     }
 
     let state = $state<UploadState>({
-        title: '',
-        startTime: new Date().toISOString().split('T')[0],
         teams: [],
         teamInput: '',
         isSubmitting: false,
@@ -37,10 +35,6 @@
     }
 
     async function submitTournament() {
-        if (!state.title.trim()) {
-            state.statusMessage = 'Tournament title is required';
-            return;
-        }
         if (state.teams.length < 2) {
             state.statusMessage = 'Add at least two teams to create a bracket';
             return;
@@ -49,9 +43,7 @@
         state.isSubmitting = true;
 
         try {
-            const payload = {
-                title: state.title,
-                start_time: state.startTime,
+            const payload: SubmitTeamsRequest = {
                 teams: state.teams,
             };
 
@@ -68,8 +60,6 @@
             }
 
             state.statusMessage = 'Tournament uploaded successfully!';
-            state.title = '';
-            state.startTime = new Date().toISOString().split('T')[0];
             state.teams = [];
             
             setTimeout(() => {
@@ -94,23 +84,6 @@
 <main class="mobile-viewport">
     <div class="upload-page">
         <h1 class="title">🏆 Tournament Upload</h1>
-
-        <div class="form-section">
-            <label class="form-label">Tournament Title</label>
-            <input
-                type="text"
-                bind:value={state.title}
-                placeholder="e.g., March Madness 2024"
-                class="form-input"
-            />
-
-            <label class="form-label">Start Date</label>
-            <input
-                type="date"
-                bind:value={state.startTime}
-                class="form-input"
-            />
-        </div>
 
         <div class="matches-section">
             <div class="section-header">
@@ -159,7 +132,7 @@
 
         <button
             onclick={submitTournament}
-            disabled={state.isSubmitting || state.teams.length < 2 || !state.title.trim()}
+            disabled={state.isSubmitting || state.teams.length < 2}
             class="btn-primary btn-submit"
         >
             {state.isSubmitting ? 'Uploading...' : 'Upload Tournament'}
