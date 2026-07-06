@@ -4,20 +4,20 @@
   "outputDirectory": "web/dist",
   "rewrites": [
     { 
-      "source": "/api/(.*)", 
-      "destination": "/api/index.go" 
+      "source": "/api/:path*", 
+      "destination": "/api/index" 
     },
     { 
       "source": "/special", 
-      "destination": "/web/dist/special.html" 
+      "destination": "/special.html" 
     },
     { 
       "source": "/upload", 
-      "destination": "/web/dist/upload.html" 
+      "destination": "/upload.html" 
     },
     { 
       "source": "/(.*)", 
-      "destination": "/web/dist/$1" 
+      "destination": "/index.html" 
     }
   ]
 }

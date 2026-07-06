@@ -40,7 +40,6 @@
                 onclick={() => chooseWinner(currentMatch.team1Id)}
                 disabled={isSubmitting}
             >
-                <span class="team-label">Team ID {currentMatch.team1Id}</span>
                 <span class="team-name">{currentMatch.team1Id != null ? (teamNames[currentMatch.team1Id] ?? '?') : '?'}</span>
                 <div class="tap-indicator">Tap to choose</div>
             </button>
@@ -52,7 +51,6 @@
                 onclick={() => chooseWinner(currentMatch.team2Id)}
                 disabled={isSubmitting}
             >
-                <span class="team-label">Team ID {currentMatch.team2Id}</span>
                 <span class="team-name">{currentMatch.team2Id != null ? (teamNames[currentMatch.team2Id] ?? '?') : '?'}</span>
                 <div class="tap-indicator">Tap to choose</div>
             </button>
@@ -141,12 +139,6 @@
 
     .team-b {
         background: linear-gradient(180deg, rgba(16, 185, 129, 0.16), #111827);
-    }
-
-    .team-label {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        margin-bottom: 6px;
     }
 
     .team-name {
