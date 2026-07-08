@@ -10,11 +10,12 @@ import {
 
 export const api = {
     async fetchBracket(username: string, isSpecialUser = false): Promise<FetchBracketResponse> {
-        const params = new URLSearchParams();
-        if (username.trim()) params.set("username", username);
-        params.set("is_special_user", isSpecialUser ? "true" : "false");
+        let queryString = `is_special_user=${isSpecialUser ? "true" : "false"}`;
+        if (username.trim()) {
+            queryString += `&username=${encodeURIComponent(username.trim())}`;
+        }
 
-        const res = await fetch(`/api/bracket?${params.toString()}`, {
+        const res = await fetch(`/api/bracket?${queryString}`, {
             headers: { Accept: "application/json" },
         });
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);

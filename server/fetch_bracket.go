@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -106,7 +105,6 @@ func (app *App) loadMatchesAndPositions(ctx context.Context, resp *proto.FetchBr
 		var matchID, roundNumber, visualPosition int
 		var team1ID, team2ID, team1PrevID, team2PrevID *int
 		if err := rows.Scan(&matchID, &roundNumber, &visualPosition, &team1ID, &team2ID, &team1PrevID, &team2PrevID); err != nil {
-			log.Println("Error scanning match:", err)
 			continue
 		}
 
@@ -155,7 +153,6 @@ func (app *App) resolveUserAndPredictions(ctx context.Context, username string, 
 		INSERT INTO users (username) VALUES ($1) 
 		ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username 
 		RETURNING user_id`, username).Scan(&userID)
-	log.Println(userID)
 	if err != nil {
 		return 0, err
 	}
@@ -176,7 +173,6 @@ func (app *App) resolveUserAndPredictions(ctx context.Context, username string, 
 			resp.Predictions[int32(matchID)] = int32(*predictedWinnerID)
 		}
 	}
-	log.Println(resp.Predictions)
 
 	if err = pRows.Err(); err != nil {
 		return userID, err

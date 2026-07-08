@@ -83,7 +83,6 @@
         state.pendingTeams = [];
         state.view = "preview";
         setStatus("Tournament created!");
-        // setStatus("Upload failed: " + err.message, true);
     }
 
     function goToUpload() {

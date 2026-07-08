@@ -5,11 +5,7 @@
         onreset: () => void;
     }
 
-    let { 
-        accuracy = null,
-        isSubmitting = false,
-        onreset
-    }: Props = $props();
+    let { accuracy = null, isSubmitting = false, onreset }: Props = $props();
 </script>
 
 <div class="accuracy-panel">
@@ -19,12 +15,9 @@
         <p>Matches are already underway. Modifications are suspended.</p>
         {#if accuracy !== null}
             <p class="accuracy-score">
-                Accuracy vs master bracket: {accuracy.toFixed(1)}%
+                Prediction Score: {accuracy.toFixed(0)}
             </p>
         {/if}
-        <button class="btn-secondary" onclick={onreset} disabled={isSubmitting}>
-            Change Session
-        </button>
     </div>
 </div>
 
@@ -32,7 +25,6 @@
     .accuracy-panel {
         background: #1e293b;
         border-radius: 28px;
-        padding: 24px;
         width: 100%;
         display: flex;
         justify-content: center;
@@ -42,6 +34,7 @@
 
     .score-card {
         display: flex;
+        padding: 24px;
         flex-direction: column;
         align-items: center;
         gap: 16px;
