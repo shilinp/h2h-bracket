@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
 
     interface Props {
         username: string;
@@ -8,14 +7,9 @@
     }
 
     let { 
-        username = '',
+        username = $bindable(''),
         onsubmit
     }: Props = $props();
-
-    const dispatch = createEventDispatcher<{
-        login: void;
-        specialToggle: void;
-    }>();
 </script>
 
 <div class="card center-flow">

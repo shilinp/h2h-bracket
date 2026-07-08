@@ -19,7 +19,6 @@ go.work.sum
 vendor/
 
 # Build output
-api
 main
 test-server
 

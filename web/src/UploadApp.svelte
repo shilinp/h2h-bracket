@@ -1,20 +1,23 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
     import {
         SubmitTeamsRequest,
         SubmitTeamsResponse,
         FetchBracketResponse,
-    } from './lib/proto/bracket';
+        type Match,
+    } from "./lib/proto/bracket";
 
-    type View = 'upload' | 'adjust';
+    import BracketPreview from "./components/BracketPreview.svelte";
+
+    type View = "upload" | "preview";
 
     interface UploadState {
         view: View;
         // Upload view
         teamInput: string;
         pendingTeams: string[];
-        // Adjust view
-        adjustTeams: { id: number; name: string }[];
+        // Preview View
+        bracketData: FetchBracketResponse | null;
         // Shared
         isSubmitting: boolean;
         isLoadingExisting: boolean;
@@ -23,17 +26,38 @@
     }
 
     let state = $state<UploadState>({
-        view: 'upload',
-        teamInput: '',
+        view: "upload",
+        teamInput: "",
         pendingTeams: [],
-        adjustTeams: [],
+        bracketData: null,
         isSubmitting: false,
         isLoadingExisting: false,
         statusMessage: null,
         statusIsError: false,
     });
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    let rounds = $derived.by(() => {
+        const matches = state.bracketData?.matches;
+        if (!matches || matches.length === 0) return [];
+
+        const grouped: { round: number; matches: Match[] }[] = [];
+        let currentRound = 0;
+        let startIndex = 0;
+        let matchesInRound = Math.ceil(matches.length / 2);
+
+        while (startIndex < matches.length) {
+            grouped.push({
+                round: currentRound,
+                matches: matches.slice(startIndex, startIndex + matchesInRound),
+            });
+            startIndex += matchesInRound;
+            matchesInRound = Math.max(1, Math.floor(matchesInRound / 2));
+            currentRound++;
+        }
+
+        return grouped;
+    });
+
 
     function setStatus(msg: string, isError = false) {
         state.statusMessage = msg;
@@ -47,15 +71,14 @@
 
     async function postTeams(teams: string[]): Promise<SubmitTeamsResponse> {
         const req = SubmitTeamsRequest.create({ teams });
-        const body = SubmitTeamsRequest.encode(req).finish();
 
-        const res = await fetch('/api/teams', {
-            method: 'POST',
+        const res = await fetch("/api/teams", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/x-protobuf',
-                accept: 'application/x-protobuf',
+                "Content-Type": "application/json",
+                accept: "application/json",
             },
-            body,
+            body: JSON.stringify(SubmitTeamsRequest.toJSON(req)),
         });
 
         if (!res.ok) {
@@ -63,28 +86,23 @@
             throw new Error(text || `HTTP ${res.status}`);
         }
 
-        const bytes = new Uint8Array(await res.arrayBuffer());
-        return SubmitTeamsResponse.decode(bytes);
+        return SubmitTeamsResponse.fromJSON(await res.json());
     }
 
-    function bracketToAdjustTeams(bracket: FetchBracketResponse): { id: number; name: string }[] {
-        return Object.entries(bracket.teamNames ?? {})
-            .map(([id, name]) => ({ id: Number(id), name }))
-            .filter(t => t.name.toUpperCase() !== 'BYE')
-            .sort((a, b) => a.id - b.id);
-    }
-
-    // ── Upload view ───────────────────────────────────────────────────────────
 
     function addTeam() {
         const input = state.teamInput.trim();
         if (!input) return;
-        if (state.pendingTeams.some(t => t.toLowerCase() === input.toLowerCase())) {
-            setStatus('That team is already in the list.', true);
+        if (
+            state.pendingTeams.some(
+                (t) => t.toLowerCase() === input.toLowerCase(),
+            )
+        ) {
+            setStatus("That team is already in the list.", true);
             return;
         }
         state.pendingTeams.push(input);
-        state.teamInput = '';
+        state.teamInput = "";
         clearStatus();
     }
 
@@ -93,12 +111,12 @@
     }
 
     function handleKeyPress(e: KeyboardEvent) {
-        if (e.key === 'Enter') addTeam();
+        if (e.key === "Enter") addTeam();
     }
 
     async function submitUpload() {
         if (state.pendingTeams.length < 2) {
-            setStatus('Add at least two teams to create a bracket.', true);
+            setStatus("Add at least two teams to create a bracket.", true);
             return;
         }
         state.isSubmitting = true;
@@ -106,61 +124,36 @@
         try {
             const resp = await postTeams(state.pendingTeams);
             if (resp.updatedBracket) {
-                state.adjustTeams = bracketToAdjustTeams(resp.updatedBracket);
+                state.bracketData = resp.updatedBracket;
             }
             state.pendingTeams = [];
-            state.view = 'adjust';
-            setStatus('Tournament created! You can now adjust team names below.');
+            state.view = "preview";
+            setStatus("Tournament created!");
         } catch (err: any) {
-            setStatus('Upload failed: ' + err.message, true);
-        } finally {
-            state.isSubmitting = false;
-        }
-    }
-
-    // ── Adjust view ───────────────────────────────────────────────────────────
-
-    async function submitAdjust() {
-        const names = state.adjustTeams.map(t => t.name.trim()).filter(Boolean);
-        if (names.length < 2) {
-            setStatus('Need at least two non-empty team names.', true);
-            return;
-        }
-        state.isSubmitting = true;
-        clearStatus();
-        try {
-            const resp = await postTeams(names);
-            if (resp.updatedBracket) {
-                state.adjustTeams = bracketToAdjustTeams(resp.updatedBracket);
-            }
-            setStatus('Teams updated and bracket regenerated.');
-        } catch (err: any) {
-            setStatus('Update failed: ' + err.message, true);
+            setStatus("Upload failed: " + err.message, true);
         } finally {
             state.isSubmitting = false;
         }
     }
 
     function goToUpload() {
-        state.view = 'upload';
+        state.view = "upload";
         state.pendingTeams = [];
+        state.bracketData = null;
         clearStatus();
     }
-
-    // ── On mount: check for an existing tournament ────────────────────────────
 
     onMount(async () => {
         state.isLoadingExisting = true;
         try {
-            const res = await fetch('/api/bracket?is_special_user=true', {
-                headers: { accept: 'application/x-protobuf' },
+            const res = await fetch("/api/bracket?is_special_user=true", {
+                headers: { accept: "application/json" },
             });
             if (res.ok) {
-                const bytes = new Uint8Array(await res.arrayBuffer());
-                const bracket = FetchBracketResponse.decode(bytes);
+                const bracket = FetchBracketResponse.fromJSON(await res.json());
                 if (bracket.matches && bracket.matches.length > 0) {
-                    state.adjustTeams = bracketToAdjustTeams(bracket);
-                    state.view = 'adjust';
+                    state.bracketData = bracket;
+                    state.view = "preview";
                 }
             }
         } catch (_) {
@@ -177,12 +170,14 @@
 
         {#if state.isLoadingExisting}
             <div class="loading-msg">Loading existing tournament...</div>
-
-        {:else if state.view === 'upload'}
+        {:else if state.view === "upload"}
             <!-- ── Upload view ── -->
             <div class="section-card">
                 <h2 class="section-title">Add Teams</h2>
-                <p class="section-hint">Enter one team name at a time. BYEs are inserted automatically if needed.</p>
+                <p class="section-hint">
+                    Enter one team name at a time. BYEs are inserted
+                    automatically if needed.
+                </p>
 
                 <div class="input-row">
                     <input
@@ -193,7 +188,11 @@
                         class="form-input"
                         disabled={state.isSubmitting}
                     />
-                    <button onclick={addTeam} disabled={state.isSubmitting} class="btn-add">
+                    <button
+                        onclick={addTeam}
+                        disabled={state.isSubmitting}
+                        class="btn-add"
+                    >
                         Add
                     </button>
                 </div>
@@ -203,21 +202,30 @@
                         {#each state.pendingTeams as team, i}
                             <div class="team-row">
                                 <span class="team-name">{team}</span>
-                                <button onclick={() => removeTeam(i)} class="btn-remove" disabled={state.isSubmitting}>✕</button>
+                                <button
+                                    onclick={() => removeTeam(i)}
+                                    class="btn-remove"
+                                    disabled={state.isSubmitting}>✕</button
+                                >
                             </div>
                         {/each}
                     </div>
                 {:else}
-                    <p class="empty-hint">No teams yet. Add at least 2 to create a bracket.</p>
+                    <p class="empty-hint">
+                        No teams yet. Add at least 2 to create a bracket.
+                    </p>
                 {/if}
             </div>
 
             <div class="warning-box">
-                ⚠️ Uploading will <strong>delete all existing brackets</strong> and regenerate the tournament.
+                ⚠️ Uploading will <strong>delete all existing brackets</strong> and
+                regenerate the tournament.
             </div>
 
             {#if state.statusMessage}
-                <div class="status-msg" class:error={state.statusIsError}>{state.statusMessage}</div>
+                <div class="status-msg" class:error={state.statusIsError}>
+                    {state.statusMessage}
+                </div>
             {/if}
 
             <button
@@ -225,44 +233,41 @@
                 disabled={state.isSubmitting || state.pendingTeams.length < 2}
                 class="btn-primary"
             >
-                {state.isSubmitting ? 'Uploading...' : `Upload Tournament (${state.pendingTeams.length} teams)`}
+                {state.isSubmitting
+                    ? "Uploading..."
+                    : `Upload Tournament (${state.pendingTeams.length} teams)`}
             </button>
-
         {:else}
-            <!-- ── Adjust view ── -->
-            <div class="section-card">
-                <h2 class="section-title">Adjust Teams</h2>
-                <p class="section-hint">Edit team names below. Saving regenerates the bracket and deletes all submitted brackets.</p>
-
-                <div class="adjust-list">
-                    {#each state.adjustTeams as team, i}
-                        <div class="adjust-row">
-                            <span class="adjust-number">{i + 1}</span>
-                            <input
-                                type="text"
-                                bind:value={team.name}
-                                class="form-input adjust-input"
-                                disabled={state.isSubmitting}
-                                placeholder="Team name"
-                            />
-                        </div>
-                    {/each}
-                </div>
+            <!-- ── Preview view ── -->
+            <div class="section-card preview-card">
+                <BracketPreview
+                    {rounds}
+                    teamNames={state.bracketData?.teamNames ?? {}}
+                    predictions={{}}
+                    masterPredictions={{}}
+                    isLocked={false}
+                    activeMatchId={null}
+                />
             </div>
 
             <div class="warning-box">
-                ⚠️ Saving changes will <strong>delete all existing brackets</strong> and regenerate the tournament.
+                ⚠️ Starting fresh will allow you to generate a new tournament,
+                but uploading it will <strong>delete the current bracket</strong
+                >.
             </div>
 
             {#if state.statusMessage}
-                <div class="status-msg" class:error={state.statusIsError}>{state.statusMessage}</div>
+                <div class="status-msg" class:error={state.statusIsError}>
+                    {state.statusMessage}
+                </div>
             {/if}
 
             <div class="action-row">
-                <button onclick={submitAdjust} disabled={state.isSubmitting} class="btn-primary flex-1">
-                    {state.isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button onclick={goToUpload} disabled={state.isSubmitting} class="btn-secondary">
+                <button
+                    onclick={goToUpload}
+                    disabled={state.isSubmitting}
+                    class="btn-secondary flex-1"
+                >
                     Start Fresh
                 </button>
             </div>
@@ -273,7 +278,8 @@
 <style>
     :global(body) {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            sans-serif;
         background-color: #0b0f19;
         color: #f1f5f9;
         overflow-y: auto;
@@ -316,6 +322,11 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+    }
+
+    .preview-card {
+        padding: 0; /* Let the preview component handle its own padding */
+        background: transparent;
     }
 
     .section-title {
@@ -389,32 +400,6 @@
         margin: 8px 0 0;
     }
 
-    /* ── Adjust list ── */
-    .adjust-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-height: 340px;
-        overflow-y: auto;
-    }
-
-    .adjust-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .adjust-number {
-        font-size: 0.8rem;
-        color: #64748b;
-        min-width: 20px;
-        text-align: right;
-    }
-
-    .adjust-input {
-        flex: 1;
-    }
-
     /* ── Warning ── */
     .warning-box {
         background: rgba(245, 158, 11, 0.08);
@@ -479,6 +464,7 @@
         cursor: pointer;
         transition: background 0.2s;
         white-space: nowrap;
+        text-align: center;
     }
 
     .btn-secondary:hover:not(:disabled) {

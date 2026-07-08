@@ -9,9 +9,9 @@
     SubmitBracketRequest,
     SubmitBracketResponse,
     DeleteBracketRequest,
-    DeleteBracketResponse,
     Match,
     MatchPosition,
+    DeleteBracketResponse,
   } from "./lib/proto/bracket";
 
   interface BracketState {
@@ -53,23 +53,49 @@
   });
 
   const bracketGraph = $derived.by(() => {
-    const resolvedMatches = state.bracket.matches.map((match) => {
-      const team1Id = match.team1PrevMatchId
-        ? state.bracket.predictions[match.team1PrevMatchId]
-        : match.team1Id;
-      
-      const team2Id = match.team2PrevMatchId
-        ? state.bracket.predictions[match.team2PrevMatchId]
-        : match.team2Id;
+    const autoWinners: Record<number, number> = {};
 
+    const sortedMatches = [...state.bracket.matches].sort((a, b) => {
+      const posA = state.bracket.matchPositions[a.matchId]?.roundNumber ?? 0;
+      const posB = state.bracket.matchPositions[b.matchId]?.roundNumber ?? 0;
+      return posA - posB;
+    });
+
+    const resolvedMatches = sortedMatches.map((match) => {
       const position = state.bracket.matchPositions[match.matchId];
+      const roundNumber = position?.roundNumber ?? 0;
+      const visualPosition = position?.visualPosition ?? 0;
+
+      let team1Id = match.team1Id;
+      if (match.team1PrevMatchId) {
+        team1Id =
+          state.bracket.predictions[match.team1PrevMatchId] ??
+          autoWinners[match.team1PrevMatchId];
+      }
+
+      let team2Id = match.team2Id;
+      if (match.team2PrevMatchId) {
+        team2Id =
+          state.bracket.predictions[match.team2PrevMatchId] ??
+          autoWinners[match.team2PrevMatchId];
+      }
+
+      const t1Name = team1Id != null ? state.bracket.teamNames[team1Id] : null;
+      const t2Name = team2Id != null ? state.bracket.teamNames[team2Id] : null;
+
+      const t1IsBye = t1Name?.toUpperCase() === "BYE";
+      const t2IsBye = t2Name?.toUpperCase() === "BYE";
+
+      if ((t1IsBye || t2IsBye) && team1Id != null && team2Id != null) {
+        autoWinners[match.matchId] = t1IsBye ? team2Id : team1Id;
+      }
 
       return {
         ...match,
         team1Id,
         team2Id,
-        roundNumber: position?.roundNumber ?? 1,
-        visualPosition: position?.visualPosition ?? 0,
+        roundNumber,
+        visualPosition,
       };
     });
 
@@ -94,6 +120,7 @@
         (m) =>
           m.team1Id != null &&
           m.team2Id != null &&
+          autoWinners[m.matchId] == null &&
           state.bracket.predictions[m.matchId] == null,
       ),
     };
@@ -103,15 +130,15 @@
   let playableMatches = $derived.by(() => bracketGraph.playable);
   let currentMatch = $derived.by(() => playableMatches[0] ?? null);
 
-  // Helper to hydrate bracket state from either initial fetch or submit response
   function applyBracketResponse(response: FetchBracketResponse) {
     state.bracket.matches = response.matches ?? [];
     state.bracket.matchPositions = response.matchPositions ?? {};
     state.bracket.isLocked = response.isLocked;
     state.bracket.accuracy = response.accuracy ?? null;
 
-    // Helper to safely parse stringified proto maps into number keys
-    const parseMap = <T>(protoMap: Record<string, T> | undefined): Record<number, T> => {
+    const parseMap = <T,>(
+      protoMap: Record<string, T> | undefined,
+    ): Record<number, T> => {
       const result: Record<number, T> = {};
       for (const [key, val] of Object.entries(protoMap || {})) {
         const numKey = Number(key);
@@ -123,7 +150,8 @@
     state.bracket.predictions = parseMap(response.predictions);
     state.bracket.teamNames = parseMap(response.teamNames);
     state.bracket.masterPredictions = parseMap(response.masterPredictions);
-    state.hasPersistedBracket = Object.keys(state.bracket.predictions).length > 0;
+    state.hasPersistedBracket =
+      Object.keys(state.bracket.predictions).length > 0;
   }
 
   async function handleLogin() {
@@ -137,19 +165,15 @@
     state.isLoading = true;
     try {
       const params = new URLSearchParams();
-      if (state.username.trim()) {
-        params.set("username", state.username);
-      }
-      
+      if (state.username.trim()) params.set("username", state.username);
+      params.set("is_special_user", "false");
+
       const res = await fetch(`/api/bracket?${params.toString()}`, {
-        headers: {
-          accept: "application/x-protobuf",
-        },
+        headers: { Accept: "application/json" },
       });
       if (!res.ok) throw new Error("Network error fetching bracket data");
-
-      const responseBytes = new Uint8Array(await res.arrayBuffer());
-      const response = FetchBracketResponse.decode(responseBytes);
+      ``;
+      const response = FetchBracketResponse.fromJSON(await res.json());
       applyBracketResponse(response);
     } catch (err) {
       console.error("Unable to load bracket payload", err);
@@ -160,7 +184,12 @@
 
   function selectWinner(matchId: number, winnerId: number) {
     if (state.bracket.isLocked) return;
-    state.bracket.predictions[matchId] = winnerId;
+
+    // Create a clean shallow copy to force Svelte 5 to trigger its reactivity graph
+    state.bracket.predictions = {
+      ...state.bracket.predictions,
+      [matchId]: winnerId,
+    };
   }
 
   async function finalizeAndSubmit() {
@@ -169,33 +198,25 @@
       username: state.username,
       predictions: state.bracket.predictions,
     });
-    const body = SubmitBracketRequest.encode(request).finish();
 
     try {
       const res = await fetch("/api/bracket", {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-protobuf",
-          accept: "application/x-protobuf",
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body,
+        body: JSON.stringify(SubmitBracketRequest.toJSON(request)),
       });
-      if (!res.ok) {
-        throw new Error(`Submission failed: ${res.status}`);
-      }
-      const bytes = new Uint8Array(await res.arrayBuffer());
-      const response = SubmitBracketResponse.decode(bytes);
-      
-      state.statusMessage = "Bracket submission complete. Waiting for master bracket results.";
-      
-      // Update local state dynamically without extra network trip
-      if (response.updatedBracket) {
-          applyBracketResponse(response.updatedBracket);
-      }
+      if (!res.ok) throw new Error(`Submission failed: ${res.status}`);
 
-      if (state.bracket.isLocked) {
-        state.statusMessage =
-          "Bracket is now locked and scored against the master bracket.";
+      const response = SubmitBracketResponse.fromJSON(await res.json());
+
+      state.statusMessage =
+        "Bracket submission complete. Waiting for master bracket results.";
+
+      if (response.updatedBracket) {
+        applyBracketResponse(response.updatedBracket);
       }
     } catch (err) {
       console.error("Bracket submission failed", err);
@@ -221,19 +242,17 @@
       const request = DeleteBracketRequest.create({
         username: state.username,
       });
-      const body = DeleteBracketRequest.encode(request).finish();
+      const body = JSON.stringify(DeleteBracketRequest.toJSON(request));
       const res = await fetch("/api/bracket", {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/x-protobuf",
-          accept: "application/x-protobuf",
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body,
       });
-      if (!res.ok) {
-        throw new Error(`Delete failed: ${res.status}`);
-      }
-      
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+
       state.bracket.predictions = {};
       state.bracket.isLocked = false;
       state.bracket.accuracy = null;
@@ -269,7 +288,7 @@
 
 <main class="mobile-viewport">
   {#if !state.isLoggedIn}
-    <SessionGate username={state.username} onsubmit={handleLogin} />
+    <SessionGate bind:username={state.username} onsubmit={handleLogin} />
   {:else if state.isLoading}
     <div class="center-flow text-muted">
       Parsing match matrix architecture...
@@ -280,14 +299,17 @@
         <div class="status-banner">{state.statusMessage}</div>
       {/if}
 
-      <BracketPreview
-        rounds={groupedMatches}
-        predictions={state.bracket.predictions}
-        teamNames={state.bracket.teamNames}
-        masterPredictions={state.bracket.masterPredictions}
-        isLocked={state.bracket.isLocked}
-        activeMatchId={currentMatch?.matchId ?? null}
-      />
+      <div class="preview-scroll-container">
+        <BracketPreview
+          rounds={groupedMatches}
+          predictions={state.bracket.predictions}
+          teamNames={state.bracket.teamNames}
+          masterPredictions={state.bracket.masterPredictions}
+          matchPositions={state.bracket.matchPositions}
+          isLocked={state.bracket.isLocked}
+          activeMatchId={currentMatch?.matchId ?? null}
+        />
+      </div>
 
       <div class="bottom-panel">
         {#if state.bracket.isLocked}
@@ -325,12 +347,14 @@
   }
 
   .mobile-viewport {
+    width: 100vw;
     max-width: 440px;
     margin: 0 auto;
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   .center-flow {
@@ -348,24 +372,34 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    gap: 16px;
-    padding: 16px;
+    overflow: hidden;
+    gap: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .preview-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .status-banner {
     background: rgba(37, 99, 235, 0.12);
     border: 1px solid rgba(37, 99, 235, 0.24);
     color: #c7d2fe;
-    border-radius: 18px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 10px 14px;
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    flex-shrink: 0;
   }
 
   .bottom-panel {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
+    flex-shrink: 0;
   }
 </style>

@@ -4,14 +4,12 @@
     import MatchPicker from "./components/MatchPicker.svelte";
     import AccuracyPanel from "./components/AccuracyPanel.svelte";
     import {
-        FetchBracketRequest,
+        FetchBracketResponse,
         SubmitBracketRequest,
         SubmitBracketResponse,
         DeleteBracketRequest,
-        DeleteBracketResponse,
         Match,
         MatchPosition,
-        FetchBracketResponse,
     } from "./lib/proto/bracket";
 
     interface BracketState {
@@ -53,7 +51,7 @@
             const team1Id = match.team1PrevMatchId
                 ? state.bracket.predictions[match.team1PrevMatchId]
                 : match.team1Id;
-                
+
             const team2Id = match.team2PrevMatchId
                 ? state.bracket.predictions[match.team2PrevMatchId]
                 : match.team2Id;
@@ -64,7 +62,7 @@
                 ...match,
                 team1Id,
                 team2Id,
-                roundNumber: position?.roundNumber ?? 1,
+                roundNumber: position?.roundNumber ?? 0,
                 visualPosition: position?.visualPosition ?? 0,
             };
         });
@@ -105,7 +103,9 @@
         state.bracket.isLocked = response.isLocked;
         state.bracket.accuracy = response.accuracy ?? null;
 
-        const parseMap = <T>(protoMap: Record<string, T> | undefined): Record<number, T> => {
+        const parseMap = <T,>(
+            protoMap: Record<string, T> | undefined,
+        ): Record<number, T> => {
             const result: Record<number, T> = {};
             for (const [key, val] of Object.entries(protoMap || {})) {
                 const numKey = Number(key);
@@ -117,21 +117,22 @@
         state.bracket.predictions = parseMap(response.predictions);
         state.bracket.teamNames = parseMap(response.teamNames);
         state.bracket.masterPredictions = parseMap(response.masterPredictions);
-        state.hasPersistedBracket = Object.keys(state.bracket.predictions).length > 0;
+        state.hasPersistedBracket =
+            Object.keys(state.bracket.predictions).length > 0;
     }
 
     async function fetchBracketData() {
         state.isLoading = true;
         try {
-            const res = await fetch(`/api/bracket`, {
-                headers: {
-                    accept: "application/x-protobuf",
+            const res = await fetch(
+                `/api/bracket?username=special&is_special_user=true`,
+                {
+                    headers: { Accept: "application/json" },
                 },
-            });
+            );
             if (!res.ok) throw new Error("Network error fetching bracket data");
 
-            const responseBytes = new Uint8Array(await res.arrayBuffer());
-            const response = FetchBracketResponse.decode(responseBytes);
+            const response = FetchBracketResponse.fromJSON(await res.json());
             applyBracketResponse(response);
         } catch (err) {
             console.error("Unable to load bracket payload", err);
@@ -142,37 +143,36 @@
 
     function selectWinner(matchId: number, winnerId: number) {
         if (state.bracket.isLocked) return;
-        state.bracket.predictions[matchId] = winnerId;
+
+        // Use a shallow copy to ensure Svelte 5 deep reactivity signals correctly
+        state.bracket.predictions = {
+            ...state.bracket.predictions,
+            [matchId]: winnerId,
+        };
     }
 
     async function finalizeAndSubmit() {
         state.isSubmitting = true;
-        
         const request = SubmitBracketRequest.create({
-            username: "", // Special mode logic
+            username: "special",
             predictions: state.bracket.predictions,
-            isSpecialUser: true,
         });
-        
-        const body = SubmitBracketRequest.encode(request).finish();
+        const body = JSON.stringify(SubmitBracketRequest.toJSON(request));
 
         try {
             const res = await fetch("/api/bracket", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/x-protobuf",
-                    accept: "application/x-protobuf",
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
                 body,
             });
-            if (!res.ok) {
-                throw new Error(`Submission failed: ${res.status}`);
-            }
-            const bytes = new Uint8Array(await res.arrayBuffer());
-            const response = SubmitBracketResponse.decode(bytes);
-            
+            if (!res.ok) throw new Error(`Submission failed: ${res.status}`);
+
+            const response = SubmitBracketResponse.fromJSON(await res.json());
             state.statusMessage = "Bracket persisted to server successfully.";
-            
+
             if (response.updatedBracket) {
                 applyBracketResponse(response.updatedBracket);
             }
@@ -200,19 +200,17 @@
             const request = DeleteBracketRequest.create({
                 username: "special",
             });
-            const body = DeleteBracketRequest.encode(request).finish();
+            const body = JSON.stringify(DeleteBracketRequest.toJSON(request));
             const res = await fetch("/api/bracket", {
                 method: "DELETE",
                 headers: {
-                    "Content-Type": "application/x-protobuf",
-                    accept: "application/x-protobuf",
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
                 },
                 body,
             });
-            if (!res.ok) {
-                throw new Error(`Delete failed: ${res.status}`);
-            }
-            
+            if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+
             state.bracket.predictions = {};
             state.bracket.isLocked = false;
             state.bracket.accuracy = null;
@@ -242,14 +240,17 @@
                 <div class="status-banner">{state.statusMessage}</div>
             {/if}
 
-            <BracketPreview
-                rounds={groupedMatches}
-                predictions={state.bracket.predictions}
-                teamNames={state.bracket.teamNames}
-                masterPredictions={state.bracket.masterPredictions}
-                isLocked={state.bracket.isLocked}
-                activeMatchId={currentMatch?.matchId ?? null}
-            />
+            <div class="preview-scroll-container">
+                <BracketPreview
+                    rounds={groupedMatches}
+                    predictions={state.bracket.predictions}
+                    teamNames={state.bracket.teamNames}
+                    masterPredictions={state.bracket.masterPredictions}
+                    matchPositions={state.bracket.matchPositions}
+                    isLocked={state.bracket.isLocked}
+                    activeMatchId={currentMatch?.matchId ?? null}
+                />
+            </div>
 
             <div class="bottom-panel">
                 {#if state.bracket.isLocked}
@@ -262,15 +263,12 @@
                     />
                 {:else}
                     <MatchPicker
-                        currentMatch={currentMatch}
+                        {currentMatch}
                         teamNames={state.bracket.teamNames}
                         remainingCount={playableMatches.length}
                         isSubmitting={state.isSubmitting}
                         onselect={(event) =>
-                            selectWinner(
-                                event.matchId,
-                                event.winnerId,
-                            )}
+                            selectWinner(event.matchId, event.winnerId)}
                         onsubmit={finalizeAndSubmit}
                         onreset={handleReset}
                     />
@@ -291,12 +289,14 @@
     }
 
     .mobile-viewport {
+        width: 100vw;
         max-width: 440px;
         margin: 0 auto;
-        height: 100vh;
+        height: 100dvh;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     .center-flow {
@@ -318,24 +318,34 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        gap: 16px;
-        padding: 16px;
+        overflow: hidden;
+        gap: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+    }
+
+    .preview-scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .status-banner {
         background: rgba(37, 99, 235, 0.12);
         border: 1px solid rgba(37, 99, 235, 0.24);
         color: #c7d2fe;
-        border-radius: 18px;
-        padding: 12px 16px;
-        margin-bottom: 12px;
+        border-radius: 12px;
+        padding: 10px 14px;
         text-align: center;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        flex-shrink: 0;
     }
 
     .bottom-panel {
         display: flex;
         flex-direction: column;
-        gap: 18px;
+        gap: 12px;
+        flex-shrink: 0;
     }
 </style>

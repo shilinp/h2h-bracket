@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package h2hbracket;
 
-option go_package = "h2h-bracket/internal/proto;proto";
+option go_package = "h2h-bracket/server/proto;proto";
 
 message Match {
   int32 match_id = 1;

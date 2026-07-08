@@ -30,7 +30,8 @@
 <div class="picker-panel">
     {#if currentMatch}
         <div class="header-meta">
-            <span class="badge">Round {currentMatch.roundNumber ?? 1}</span>
+            <!-- Interpret 0-indexed roundNumber safely as 1-indexed visual label -->
+            <span class="badge">Round {(currentMatch.roundNumber ?? 0) + 1}</span>
             <span class="counter">Unresolved picks: {remainingCount}</span>
         </div>
 
@@ -40,7 +41,7 @@
                 onclick={() => chooseWinner(currentMatch.team1Id)}
                 disabled={isSubmitting}
             >
-                <span class="team-name">{currentMatch.team1Id != null ? (teamNames[currentMatch.team1Id] ?? '?') : '?'}</span>
+                <span class="team-name">{currentMatch.team1Id != null ? (teamNames[currentMatch.team1Id] ?? 'TBD') : 'TBD'}</span>
                 <div class="tap-indicator">Tap to choose</div>
             </button>
             <div class="divider-vs">
@@ -51,7 +52,7 @@
                 onclick={() => chooseWinner(currentMatch.team2Id)}
                 disabled={isSubmitting}
             >
-                <span class="team-name">{currentMatch.team2Id != null ? (teamNames[currentMatch.team2Id] ?? '?') : '?'}</span>
+                <span class="team-name">{currentMatch.team2Id != null ? (teamNames[currentMatch.team2Id] ?? 'TBD') : 'TBD'}</span>
                 <div class="tap-indicator">Tap to choose</div>
             </button>
         </div>
@@ -73,12 +74,13 @@
 <style>
     .picker-panel {
         background: #1e293b;
-        border-radius: 28px;
-        padding: 18px;
+        border-radius: 20px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         width: 100%;
+        box-sizing: border-box;
     }
 
     .header-meta {
@@ -87,12 +89,12 @@
         gap: 12px;
         align-items: center;
         color: #cbd5e1;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
     }
 
     .badge {
         background: #0f172a;
-        padding: 10px 14px;
+        padding: 6px 12px;
         border-radius: 999px;
         font-weight: 700;
     }
@@ -103,8 +105,9 @@
 
     .choice-row {
         display: flex;
-        gap: 12px;
+        gap: 8px;
         width: 100%;
+        box-sizing: border-box;
     }
 
     .choice-pane {
@@ -113,19 +116,20 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        min-height: 130px;
-        border-radius: 20px;
+        min-height: 100px;
+        border-radius: 12px;
         border: 1px solid #334155;
         background: #111827;
         color: white;
         cursor: pointer;
-        padding: 16px;
-        transition: transform 0.1s ease, border-color 0.2s ease, background 0.2s ease;
+        padding: 12px;
+        box-sizing: border-box;
+        overflow: hidden;
+        transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .choice-pane:hover:not(:disabled) {
         border-color: #2563eb;
-        transform: translateY(-1px);
     }
 
     .choice-pane:disabled {
@@ -134,59 +138,68 @@
     }
 
     .team-a {
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.16), #111827);
+        background: linear-gradient(180deg, rgba(37, 99, 235, 0.12), #111827);
     }
 
     .team-b {
-        background: linear-gradient(180deg, rgba(16, 185, 129, 0.16), #111827);
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.12), #111827);
     }
 
     .team-name {
-        font-size: 1.3rem;
+        font-size: 1.05rem;
         font-weight: 800;
         text-align: center;
         line-height: 1.2;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .tap-indicator {
-        margin-top: 12px;
-        color: #cbd5e1;
-        font-size: 0.85rem;
+        margin-top: 6px;
+        color: #94a3b8;
+        font-size: 0.75rem;
     }
 
     .divider-vs {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 50px;
-        color: #94a3b8;
-        font-weight: 700;
+        min-width: 32px;
+        color: #64748b;
+        font-weight: 800;
+        font-size: 0.75rem;
     }
 
     .picker-empty {
         background: #0f172a;
-        border-radius: 24px;
-        padding: 24px;
+        border-radius: 14px;
+        padding: 16px;
         text-align: center;
         color: #cbd5e1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         align-items: center;
+        box-sizing: border-box;
+        width: 100%;
     }
 
     .success-icon {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
 
     .picker-empty h2 {
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .picker-empty p {
         color: #94a3b8;
         margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.3;
     }
 
     .btn-primary {
@@ -194,9 +207,10 @@
         background: #059669;
         color: white;
         border: none;
-        padding: 16px;
-        border-radius: 14px;
+        padding: 14px;
+        border-radius: 10px;
         font-weight: 600;
+        font-size: 0.95rem;
         cursor: pointer;
     }
 
@@ -205,13 +219,14 @@
         border: none;
         color: #f87171;
         font-weight: 500;
+        font-size: 0.85rem;
         cursor: pointer;
         text-decoration: underline;
     }
 
     .btn-primary:disabled,
     .btn-text:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
     }
 </style>
