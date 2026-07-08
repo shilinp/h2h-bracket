@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"h2h-bracket/server/constants"
 	"h2h-bracket/server/proto"
 )
 
@@ -29,6 +30,14 @@ func (app *App) HandleDeleteBracket(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Error(w, "Failed to delete bracket", http.StatusInternalServerError)
 		return
+	}
+
+	if req.GetUsername() == constants.SpecialUsername {
+		err = app.unlockGlobalLock(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	resp := &proto.DeleteBracketResponse{Status: "Bracket deleted successfully"}
@@ -76,5 +85,14 @@ func (app *App) deletePredictionsByUsername(ctx context.Context, username string
 		return errNotFound
 	}
 
+	return nil
+}
+
+// unlockGlobalLock deletes the globally shared submission lock
+func (app *App) unlockGlobalLock(ctx context.Context) error {
+	_, err := app.DB.Exec(ctx, "DELETE FROM global_settings")
+	if err != nil {
+		return errors.New("Failed to clear global settings")
+	}
 	return nil
 }

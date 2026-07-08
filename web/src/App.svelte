@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { createBracketState } from "./bracket.svelte";
+
   import SessionGate from "./components/SessionGate.svelte";
   import BracketPreview from "./components/BracketPreview.svelte";
   import MatchPicker from "./components/MatchPicker.svelte";
@@ -14,16 +16,6 @@
     DeleteBracketResponse,
   } from "./lib/proto/bracket";
 
-  interface BracketState {
-    matches: Match[];
-    matchPositions: Record<number, MatchPosition>;
-    predictions: Record<number, number>;
-    teamNames: Record<number, string>;
-    masterPredictions: Record<number, number>;
-    isLocked: boolean;
-    accuracy: number | null;
-  }
-
   interface AppState {
     username: string;
     isLoggedIn: boolean;
@@ -31,7 +23,6 @@
     isSubmitting: boolean;
     hasPersistedBracket: boolean;
     statusMessage: string | null;
-    bracket: BracketState;
   }
 
   let state = $state<AppState>({
@@ -40,119 +31,14 @@
     isLoading: true,
     isSubmitting: false,
     hasPersistedBracket: false,
-    statusMessage: null,
-    bracket: {
-      matches: [],
-      matchPositions: {},
-      predictions: {},
-      teamNames: {},
-      masterPredictions: {},
-      isLocked: false,
-      accuracy: null,
-    },
+    statusMessage: null
   });
 
-  const bracketGraph = $derived.by(() => {
-    const autoWinners: Record<number, number> = {};
+  const bracketState = createBracketState();
 
-    const sortedMatches = [...state.bracket.matches].sort((a, b) => {
-      const posA = state.bracket.matchPositions[a.matchId]?.roundNumber ?? 0;
-      const posB = state.bracket.matchPositions[b.matchId]?.roundNumber ?? 0;
-      return posA - posB;
-    });
-
-    const resolvedMatches = sortedMatches.map((match) => {
-      const position = state.bracket.matchPositions[match.matchId];
-      const roundNumber = position?.roundNumber ?? 0;
-      const visualPosition = position?.visualPosition ?? 0;
-
-      let team1Id = match.team1Id;
-      if (match.team1PrevMatchId) {
-        team1Id =
-          state.bracket.predictions[match.team1PrevMatchId] ??
-          autoWinners[match.team1PrevMatchId];
-      }
-
-      let team2Id = match.team2Id;
-      if (match.team2PrevMatchId) {
-        team2Id =
-          state.bracket.predictions[match.team2PrevMatchId] ??
-          autoWinners[match.team2PrevMatchId];
-      }
-
-      const t1Name = team1Id != null ? state.bracket.teamNames[team1Id] : null;
-      const t2Name = team2Id != null ? state.bracket.teamNames[team2Id] : null;
-
-      const t1IsBye = t1Name?.toUpperCase() === "BYE";
-      const t2IsBye = t2Name?.toUpperCase() === "BYE";
-
-      if ((t1IsBye || t2IsBye) && team1Id != null && team2Id != null) {
-        autoWinners[match.matchId] = t1IsBye ? team2Id : team1Id;
-      }
-
-      return {
-        ...match,
-        team1Id,
-        team2Id,
-        roundNumber,
-        visualPosition,
-      };
-    });
-
-    const groupedRounds = new Map<number, typeof resolvedMatches>();
-    for (const match of resolvedMatches) {
-      if (!groupedRounds.has(match.roundNumber)) {
-        groupedRounds.set(match.roundNumber, []);
-      }
-      groupedRounds.get(match.roundNumber)!.push(match);
-    }
-
-    for (const [_, matches] of groupedRounds) {
-      matches.sort((a, b) => a.visualPosition - b.visualPosition);
-    }
-
-    return {
-      presentationRounds: Array.from(groupedRounds.entries())
-        .map(([round, matches]) => ({ round, matches }))
-        .sort((a, b) => a.round - b.round),
-
-      playable: resolvedMatches.filter(
-        (m) =>
-          m.team1Id != null &&
-          m.team2Id != null &&
-          autoWinners[m.matchId] == null &&
-          state.bracket.predictions[m.matchId] == null,
-      ),
-    };
-  });
-
-  let groupedMatches = $derived.by(() => bracketGraph.presentationRounds);
-  let playableMatches = $derived.by(() => bracketGraph.playable);
+  let groupedMatches = $derived.by(() => bracketState.graph.presentationRounds);
+  let playableMatches = $derived.by(() => bracketState.graph.playable);
   let currentMatch = $derived.by(() => playableMatches[0] ?? null);
-
-  function applyBracketResponse(response: FetchBracketResponse) {
-    state.bracket.matches = response.matches ?? [];
-    state.bracket.matchPositions = response.matchPositions ?? {};
-    state.bracket.isLocked = response.isLocked;
-    state.bracket.accuracy = response.accuracy ?? null;
-
-    const parseMap = <T,>(
-      protoMap: Record<string, T> | undefined,
-    ): Record<number, T> => {
-      const result: Record<number, T> = {};
-      for (const [key, val] of Object.entries(protoMap || {})) {
-        const numKey = Number(key);
-        if (!isNaN(numKey)) result[numKey] = val;
-      }
-      return result;
-    };
-
-    state.bracket.predictions = parseMap(response.predictions);
-    state.bracket.teamNames = parseMap(response.teamNames);
-    state.bracket.masterPredictions = parseMap(response.masterPredictions);
-    state.hasPersistedBracket =
-      Object.keys(state.bracket.predictions).length > 0;
-  }
 
   async function handleLogin() {
     if (!state.username.trim()) return;
@@ -174,7 +60,7 @@
       if (!res.ok) throw new Error("Network error fetching bracket data");
       ``;
       const response = FetchBracketResponse.fromJSON(await res.json());
-      applyBracketResponse(response);
+      bracketState.applyResponse(response);
     } catch (err) {
       console.error("Unable to load bracket payload", err);
     } finally {
@@ -182,21 +68,11 @@
     }
   }
 
-  function selectWinner(matchId: number, winnerId: number) {
-    if (state.bracket.isLocked) return;
-
-    // Create a clean shallow copy to force Svelte 5 to trigger its reactivity graph
-    state.bracket.predictions = {
-      ...state.bracket.predictions,
-      [matchId]: winnerId,
-    };
-  }
-
   async function finalizeAndSubmit() {
     state.isSubmitting = true;
     const request = SubmitBracketRequest.create({
       username: state.username,
-      predictions: state.bracket.predictions,
+      predictions: bracketState.predictions,
     });
 
     try {
@@ -216,7 +92,7 @@
         "Bracket submission complete. Waiting for master bracket results.";
 
       if (response.updatedBracket) {
-        applyBracketResponse(response.updatedBracket);
+        bracketState.applyResponse(response.updatedBracket);
       }
     } catch (err) {
       console.error("Bracket submission failed", err);
@@ -231,7 +107,7 @@
       await deletePersistedBracket();
       state.statusMessage = "Server-persisted bracket has been deleted.";
     } else {
-      state.bracket.predictions = {};
+      bracketState.clearPredictions();
       state.statusMessage = "Local draft cleared.";
     }
   }
@@ -253,9 +129,7 @@
       });
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
 
-      state.bracket.predictions = {};
-      state.bracket.isLocked = false;
-      state.bracket.accuracy = null;
+      bracketState.clearPredictions();
       state.hasPersistedBracket = false;
       await fetchBracketData();
     } catch (err) {
@@ -302,19 +176,19 @@
       <div class="preview-scroll-container">
         <BracketPreview
           rounds={groupedMatches}
-          predictions={state.bracket.predictions}
-          teamNames={state.bracket.teamNames}
-          masterPredictions={state.bracket.masterPredictions}
-          matchPositions={state.bracket.matchPositions}
-          isLocked={state.bracket.isLocked}
+          predictions={bracketState.predictions}
+          teamNames={bracketState.teamNames}
+          masterPredictions={bracketState.masterPredictions}
+          matchPositions={bracketState.matchPositions}
+          isLocked={bracketState.isLocked}
           activeMatchId={currentMatch?.matchId ?? null}
         />
       </div>
 
       <div class="bottom-panel">
-        {#if state.bracket.isLocked}
+        {#if bracketState.isLocked}
           <AccuracyPanel
-            accuracy={state.bracket.accuracy}
+            accuracy={bracketState.accuracy}
             isSubmitting={state.isSubmitting}
             onreset={() => {
               location.reload();
@@ -323,10 +197,10 @@
         {:else}
           <MatchPicker
             {currentMatch}
-            teamNames={state.bracket.teamNames}
+            teamNames={bracketState.teamNames}
             remainingCount={playableMatches.length}
             isSubmitting={state.isSubmitting}
-            onselect={(event) => selectWinner(event.matchId, event.winnerId)}
+            onselect={(event) => bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}
             onreset={handleReset}
           />

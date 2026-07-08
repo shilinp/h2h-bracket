@@ -114,6 +114,7 @@ func (app *App) clearExistingTournament(ctx context.Context, tx pgx.Tx) error {
 		"DELETE FROM match_predictions",
 		"DELETE FROM matches",
 		"DELETE FROM teams",
+		"DELETE FROM global_settings",
 	}
 	for _, query := range queries {
 		if _, err := tx.Exec(ctx, query); err != nil {
