@@ -49,6 +49,7 @@ message DeleteBracketRequest {
 
 message DeleteBracketResponse {
   string status = 1;
+  FetchBracketResponse updated_bracket = 2;
 }
 
 message SubmitTeamsRequest {
