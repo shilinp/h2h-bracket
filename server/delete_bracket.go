@@ -40,15 +40,7 @@ func (app *App) HandleDeleteBracket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp := &proto.DeleteBracketResponse{Status: "Bracket deleted successfully"}
-	w.Header().Set("Content-Type", "application/json")
-	data, err := protojson.Marshal(resp)
-	if err != nil {
-		http.Error(w, "Failed to serialize response", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	app.respondWithFreshBracket(r.Context(), w, req.GetUsername())
 }
 
 // parseDeleteRequest extracts and validates the incoming delete command payload.
@@ -95,4 +87,26 @@ func (app *App) unlockGlobalLock(ctx context.Context) error {
 		return errors.New("Failed to clear global settings")
 	}
 	return nil
+}
+
+// respondWithActiveBracket pulls the bracket free of predictions and ships it back over the connection wire.
+func (app *App) respondWithFreshBracket(ctx context.Context, w http.ResponseWriter, username string) {
+	bracketResp, err := app.fetchActiveTournamentBracket(ctx, "", username == constants.SpecialUsername)
+	if err != nil {
+		http.Error(w, "Failed to fetch generated bracket: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp := &proto.DeleteBracketResponse{
+		Status:         "Bracket deleted successfully",
+		UpdatedBracket: bracketResp,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	data, err := protojson.Marshal(resp)
+	if err != nil {
+		http.Error(w, "Failed to serialize response", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }

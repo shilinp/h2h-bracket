@@ -8,6 +8,7 @@ export function createBracketState() {
   let masterPredictions = $state<Record<number, number>>({});
   let isLocked = $state(false);
   let accuracy = $state<number | null>(null);
+  let hasPersistedBracket = $state(false)
 
   const graph = $derived.by(() => {
     const autoWinners: Record<number, number> = {};
@@ -91,6 +92,7 @@ export function createBracketState() {
     predictions = parseMap(response.predictions);
     teamNames = parseMap(response.teamNames);
     masterPredictions = parseMap(response.masterPredictions);
+    hasPersistedBracket = Object.keys(predictions).length > 0;
   }
 
   function selectWinner(matchId: number, winnerId: number) {
@@ -110,7 +112,7 @@ export function createBracketState() {
     get accuracy() { return accuracy; },
     get masterPredictions() { return masterPredictions; },
     get matchPositions() { return matchPositions; },
-    get hasPersistedBracket() { return Object.keys(predictions).length > 0; },
+    get hasPersistedBracket() { return hasPersistedBracket },
     applyResponse,
     selectWinner,
     clearPredictions,

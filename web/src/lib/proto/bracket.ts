@@ -84,6 +84,7 @@ export interface DeleteBracketRequest {
 
 export interface DeleteBracketResponse {
   status: string;
+  updatedBracket: FetchBracketResponse | undefined;
 }
 
 export interface SubmitTeamsRequest {
@@ -1364,13 +1365,16 @@ export const DeleteBracketRequest: MessageFns<DeleteBracketRequest> = {
 };
 
 function createBaseDeleteBracketResponse(): DeleteBracketResponse {
-  return { status: "" };
+  return { status: "", updatedBracket: undefined };
 }
 
 export const DeleteBracketResponse: MessageFns<DeleteBracketResponse> = {
   encode(message: DeleteBracketResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.status !== "") {
       writer.uint32(10).string(message.status);
+    }
+    if (message.updatedBracket !== undefined) {
+      FetchBracketResponse.encode(message.updatedBracket, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1390,6 +1394,14 @@ export const DeleteBracketResponse: MessageFns<DeleteBracketResponse> = {
           message.status = reader.string();
           continue;
         }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.updatedBracket = FetchBracketResponse.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1400,13 +1412,23 @@ export const DeleteBracketResponse: MessageFns<DeleteBracketResponse> = {
   },
 
   fromJSON(object: any): DeleteBracketResponse {
-    return { status: isSet(object.status) ? globalThis.String(object.status) : "" };
+    return {
+      status: isSet(object.status) ? globalThis.String(object.status) : "",
+      updatedBracket: isSet(object.updatedBracket)
+        ? FetchBracketResponse.fromJSON(object.updatedBracket)
+        : isSet(object.updated_bracket)
+        ? FetchBracketResponse.fromJSON(object.updated_bracket)
+        : undefined,
+    };
   },
 
   toJSON(message: DeleteBracketResponse): unknown {
     const obj: any = {};
     if (message.status !== "") {
       obj.status = message.status;
+    }
+    if (message.updatedBracket !== undefined) {
+      obj.updatedBracket = FetchBracketResponse.toJSON(message.updatedBracket);
     }
     return obj;
   },
@@ -1417,6 +1439,9 @@ export const DeleteBracketResponse: MessageFns<DeleteBracketResponse> = {
   fromPartial<I extends Exact<DeepPartial<DeleteBracketResponse>, I>>(object: I): DeleteBracketResponse {
     const message = createBaseDeleteBracketResponse();
     message.status = object.status ?? "";
+    message.updatedBracket = (object.updatedBracket !== undefined && object.updatedBracket !== null)
+      ? FetchBracketResponse.fromPartial(object.updatedBracket)
+      : undefined;
     return message;
   },
 };

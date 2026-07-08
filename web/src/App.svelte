@@ -21,7 +21,6 @@
     isLoggedIn: boolean;
     isLoading: boolean;
     isSubmitting: boolean;
-    hasPersistedBracket: boolean;
     statusMessage: string | null;
   }
 
@@ -30,8 +29,7 @@
     isLoggedIn: false,
     isLoading: true,
     isSubmitting: false,
-    hasPersistedBracket: false,
-    statusMessage: null
+    statusMessage: null,
   });
 
   const bracketState = createBracketState();
@@ -103,7 +101,7 @@
   }
 
   async function handleReset() {
-    if (state.hasPersistedBracket) {
+    if (bracketState.hasPersistedBracket) {
       await deletePersistedBracket();
       state.statusMessage = "Server-persisted bracket has been deleted.";
     } else {
@@ -128,10 +126,11 @@
         body,
       });
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      const response = DeleteBracketResponse.fromJSON(await res.json());
 
-      bracketState.clearPredictions();
-      state.hasPersistedBracket = false;
-      await fetchBracketData();
+      if (response.updatedBracket) {
+        bracketState.applyResponse(response.updatedBracket);
+      }
     } catch (err) {
       console.error("Bracket delete failed", err);
       alert("Could not reset your server-saved bracket.");
@@ -200,7 +199,8 @@
             teamNames={bracketState.teamNames}
             remainingCount={playableMatches.length}
             isSubmitting={state.isSubmitting}
-            onselect={(event) => bracketState.selectWinner(event.matchId, event.winnerId)}
+            onselect={(event) =>
+              bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}
             onreset={handleReset}
           />

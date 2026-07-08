@@ -450,10 +450,11 @@ func (x *DeleteBracketRequest) GetUsername() string {
 }
 
 type DeleteBracketResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Status         string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	UpdatedBracket *FetchBracketResponse  `protobuf:"bytes,2,opt,name=updated_bracket,json=updatedBracket,proto3" json:"updated_bracket,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DeleteBracketResponse) Reset() {
@@ -491,6 +492,13 @@ func (x *DeleteBracketResponse) GetStatus() string {
 		return x.Status
 	}
 	return ""
+}
+
+func (x *DeleteBracketResponse) GetUpdatedBracket() *FetchBracketResponse {
+	if x != nil {
+		return x.UpdatedBracket
+	}
+	return nil
 }
 
 type SubmitTeamsRequest struct {
@@ -644,9 +652,10 @@ const file_proto_bracket_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12I\n" +
 	"\x0fupdated_bracket\x18\x02 \x01(\v2 .h2hbracket.FetchBracketResponseR\x0eupdatedBracket\"2\n" +
 	"\x14DeleteBracketRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\"/\n" +
+	"\busername\x18\x01 \x01(\tR\busername\"z\n" +
 	"\x15DeleteBracketResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\"*\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12I\n" +
+	"\x0fupdated_bracket\x18\x02 \x01(\v2 .h2hbracket.FetchBracketResponseR\x0eupdatedBracket\"*\n" +
 	"\x12SubmitTeamsRequest\x12\x14\n" +
 	"\x05teams\x18\x01 \x03(\tR\x05teams\"x\n" +
 	"\x13SubmitTeamsResponse\x12\x16\n" +
@@ -691,13 +700,14 @@ var file_proto_bracket_proto_depIdxs = []int32{
 	13, // 4: h2hbracket.FetchBracketResponse.master_predictions:type_name -> h2hbracket.FetchBracketResponse.MasterPredictionsEntry
 	14, // 5: h2hbracket.SubmitBracketRequest.predictions:type_name -> h2hbracket.SubmitBracketRequest.PredictionsEntry
 	3,  // 6: h2hbracket.SubmitBracketResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
-	3,  // 7: h2hbracket.SubmitTeamsResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
-	1,  // 8: h2hbracket.FetchBracketResponse.MatchPositionsEntry.value:type_name -> h2hbracket.MatchPosition
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	3,  // 7: h2hbracket.DeleteBracketResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
+	3,  // 8: h2hbracket.SubmitTeamsResponse.updated_bracket:type_name -> h2hbracket.FetchBracketResponse
+	1,  // 9: h2hbracket.FetchBracketResponse.MatchPositionsEntry.value:type_name -> h2hbracket.MatchPosition
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_proto_bracket_proto_init() }
