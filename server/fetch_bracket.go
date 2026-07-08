@@ -67,12 +67,12 @@ func (app *App) fetchActiveTournamentBracket(ctx context.Context, username strin
 
 	app.loadTeamNames(ctx, resp)
 
-	userID, err := app.resolveUserAndPredictions(ctx, username, resp)
+	_, err := app.resolveUserAndPredictions(ctx, username, resp)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := app.loadMasterDataAndAccuracy(ctx, userID, username, isSpecialUser, resp); err != nil {
+	if err := app.loadMasterDataAndAccuracy(ctx, resp); err != nil {
 		return nil, err
 	}
 
@@ -155,6 +155,7 @@ func (app *App) resolveUserAndPredictions(ctx context.Context, username string, 
 		INSERT INTO users (username) VALUES ($1) 
 		ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username 
 		RETURNING user_id`, username).Scan(&userID)
+	log.Println(userID)
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +164,7 @@ func (app *App) resolveUserAndPredictions(ctx context.Context, username string, 
 		SELECT match_id, predicted_winner_id 
 		FROM match_predictions WHERE user_id = $1`, userID)
 	if err != nil {
-		return userID, nil
+		return userID, err
 	}
 	defer pRows.Close()
 
@@ -175,12 +176,17 @@ func (app *App) resolveUserAndPredictions(ctx context.Context, username string, 
 			resp.Predictions[int32(matchID)] = int32(*predictedWinnerID)
 		}
 	}
+	log.Println(resp.Predictions)
+
+	if err = pRows.Err(); err != nil {
+		return userID, err
+	}
 
 	return userID, nil
 }
 
 // loadMasterDataAndAccuracy handles specialized comparative analytics scoring.
-func (app *App) loadMasterDataAndAccuracy(ctx context.Context, userID int, username string, isSpecialUser bool, resp *proto.FetchBracketResponse) error {
+func (app *App) loadMasterDataAndAccuracy(ctx context.Context, resp *proto.FetchBracketResponse) error {
 	var masterID int
 	err := app.DB.QueryRow(ctx, "SELECT user_id FROM users WHERE username = $1", constants.SpecialUsername).Scan(&masterID)
 	if err != nil {
@@ -202,22 +208,22 @@ func (app *App) loadMasterDataAndAccuracy(ctx context.Context, userID int, usern
 		}
 	}
 
-	isMasterViewing := isSpecialUser || username == constants.SpecialUsername
-	if resp.IsLocked && userID != 0 && !isMasterViewing {
-		var total, correct int
-		err = app.DB.QueryRow(ctx, `
-			SELECT 
-				COUNT(*) as total,
-				SUM(CASE WHEN up.predicted_winner_id = ap.predicted_winner_id THEN 1 ELSE 0 END) as correct
-			FROM match_predictions up
-			JOIN match_predictions ap ON up.match_id = ap.match_id
-			WHERE up.user_id = $1 AND ap.user_id = $2`,
-			userID, masterID).Scan(&total, &correct)
+	// Calculate NCAA scored accuracy if both user and master predictions exist
+	if len(resp.Predictions) > 0 && len(resp.MasterPredictions) > 0 {
+		var totalPoints float64
 
-		if err == nil && total > 0 {
-			acc := (float64(correct) / float64(total)) * 100.0
-			resp.Accuracy = &acc
+		for matchID, userPick := range resp.Predictions {
+			if masterPick, matchExists := resp.MasterPredictions[matchID]; matchExists {
+				if userPick == masterPick {
+					if pos, posExists := resp.MatchPositions[matchID]; posExists && pos.RoundNumber > 0 {
+						// NCAA scoring: 2^(round - 1)
+						points := 1 << (pos.RoundNumber)
+						totalPoints += float64(points)
+					}
+				}
+			}
 		}
+		resp.Accuracy = &totalPoints
 	}
 
 	return nil
