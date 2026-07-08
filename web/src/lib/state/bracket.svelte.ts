@@ -1,4 +1,4 @@
-import { FetchBracketResponse, Match, MatchPosition } from "./lib/proto/bracket";
+import { FetchBracketResponse, Match, MatchPosition } from "../proto/bracket";
 
 export function createBracketState() {
   let matches = $state<Match[]>([]);

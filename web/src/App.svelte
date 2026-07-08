@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { createBracketState } from "./bracket.svelte";
+  import { createBracketState } from "./lib/state/bracket.svelte";
+  import { createFetchBracketState } from "./lib/state/fetchBracket.svelte";
+  import { createSubmitBracketState } from "./lib/state/submitBracket.svelte";
+  import { createDeleteState } from "./lib/state/deleteBracket.svelte";
 
   import SessionGate from "./components/SessionGate.svelte";
   import BracketPreview from "./components/BracketPreview.svelte";
@@ -19,20 +22,19 @@
   interface AppState {
     username: string;
     isLoggedIn: boolean;
-    isLoading: boolean;
-    isSubmitting: boolean;
     statusMessage: string | null;
   }
 
   let state = $state<AppState>({
     username: "",
     isLoggedIn: false,
-    isLoading: true,
-    isSubmitting: false,
     statusMessage: null,
   });
 
   const bracketState = createBracketState();
+  const fetchBracketState = createFetchBracketState(bracketState);
+  const submitBracketState = createSubmitBracketState(bracketState);
+  const deleteBracketState = createDeleteState(bracketState);
 
   let groupedMatches = $derived.by(() => bracketState.graph.presentationRounds);
   let playableMatches = $derived.by(() => bracketState.graph.playable);
@@ -42,67 +44,17 @@
     if (!state.username.trim()) return;
     localStorage.setItem("bracket_username", state.username);
     state.isLoggedIn = true;
-    await fetchBracketData();
-  }
-
-  async function fetchBracketData() {
-    state.isLoading = true;
-    try {
-      const params = new URLSearchParams();
-      if (state.username.trim()) params.set("username", state.username);
-      params.set("is_special_user", "false");
-
-      const res = await fetch(`/api/bracket?${params.toString()}`, {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) throw new Error("Network error fetching bracket data");
-      ``;
-      const response = FetchBracketResponse.fromJSON(await res.json());
-      bracketState.applyResponse(response);
-    } catch (err) {
-      console.error("Unable to load bracket payload", err);
-    } finally {
-      state.isLoading = false;
-    }
+    await fetchBracketState.fetchBracket(state.username, false)
   }
 
   async function finalizeAndSubmit() {
-    state.isSubmitting = true;
-    const request = SubmitBracketRequest.create({
-      username: state.username,
-      predictions: bracketState.predictions,
-    });
-
-    try {
-      const res = await fetch("/api/bracket", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(SubmitBracketRequest.toJSON(request)),
-      });
-      if (!res.ok) throw new Error(`Submission failed: ${res.status}`);
-
-      const response = SubmitBracketResponse.fromJSON(await res.json());
-
-      state.statusMessage =
-        "Bracket submission complete. Waiting for master bracket results.";
-
-      if (response.updatedBracket) {
-        bracketState.applyResponse(response.updatedBracket);
-      }
-    } catch (err) {
-      console.error("Bracket submission failed", err);
-      alert("Could not submit your bracket. Please try again.");
-    } finally {
-      state.isSubmitting = false;
-    }
+    await submitBracketState.submitBracket(state.username, false)
+    state.statusMessage = "Bracket submission complete. Waiting for master bracket results.";
   }
 
   async function handleReset() {
     if (bracketState.hasPersistedBracket) {
-      await deletePersistedBracket();
+      await deleteBracketState.deleteBracket(state.username);
       state.statusMessage = "Server-persisted bracket has been deleted.";
     } else {
       bracketState.clearPredictions();
@@ -110,51 +62,15 @@
     }
   }
 
-  async function deletePersistedBracket() {
-    state.isSubmitting = true;
-    try {
-      const request = DeleteBracketRequest.create({
-        username: state.username,
-      });
-      const body = JSON.stringify(DeleteBracketRequest.toJSON(request));
-      const res = await fetch("/api/bracket", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body,
-      });
-      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      const response = DeleteBracketResponse.fromJSON(await res.json());
-
-      if (response.updatedBracket) {
-        bracketState.applyResponse(response.updatedBracket);
-      }
-    } catch (err) {
-      console.error("Bracket delete failed", err);
-      alert("Could not reset your server-saved bracket.");
-    } finally {
-      state.isSubmitting = false;
-    }
-  }
-
   onMount(() => {
-    const params = new URLSearchParams(window.location.search);
     const savedUsername = localStorage.getItem("bracket_username");
-    const urlUsername = params.get("username");
-
-    if (urlUsername) {
-      state.username = urlUsername;
-    } else if (savedUsername) {
+    if (savedUsername) {
       state.username = savedUsername;
     }
 
     if (state.username) {
       state.isLoggedIn = true;
-      fetchBracketData();
-    } else {
-      state.isLoading = false;
+      fetchBracketState.fetchBracket(state.username, false)
     }
   });
 </script>
@@ -162,7 +78,7 @@
 <main class="mobile-viewport">
   {#if !state.isLoggedIn}
     <SessionGate bind:username={state.username} onsubmit={handleLogin} />
-  {:else if state.isLoading}
+  {:else if fetchBracketState.isInProgress}
     <div class="center-flow text-muted">
       Parsing match matrix architecture...
     </div>
@@ -188,7 +104,7 @@
         {#if bracketState.isLocked}
           <AccuracyPanel
             accuracy={bracketState.accuracy}
-            isSubmitting={state.isSubmitting}
+            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
             onreset={() => {
               location.reload();
             }}
@@ -198,7 +114,7 @@
             {currentMatch}
             teamNames={bracketState.teamNames}
             remainingCount={playableMatches.length}
-            isSubmitting={state.isSubmitting}
+            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
             onselect={(event) =>
               bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}

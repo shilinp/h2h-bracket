@@ -1,6 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { createBracketState } from "./bracket.svelte";
+    import { createBracketState } from "./lib/state/bracket.svelte";
+    import { createFetchBracketState } from "./lib/state/fetchBracket.svelte";
+    import { createSubmitBracketState } from "./lib/state/submitBracket.svelte";
+    import { createDeleteState } from "./lib/state/deleteBracket.svelte";
 
     import BracketPreview from "./components/BracketPreview.svelte";
     import MatchPicker from "./components/MatchPicker.svelte";
@@ -16,18 +19,17 @@
     } from "./lib/proto/bracket";
 
     interface AppState {
-        isLoading: boolean;
-        isSubmitting: boolean;
         statusMessage: string | null;
     }
 
     let state = $state<AppState>({
-        isLoading: true,
-        isSubmitting: false,
         statusMessage: null,
     });
 
     const bracketState = createBracketState();
+    const fetchBracketState = createFetchBracketState(bracketState);
+    const submitBracketState = createSubmitBracketState(bracketState);
+    const deleteBracketState = createDeleteState(bracketState);
 
     let groupedMatches = $derived.by(
         () => bracketState.graph.presentationRounds,
@@ -35,62 +37,14 @@
     let playableMatches = $derived.by(() => bracketState.graph.playable);
     let currentMatch = $derived.by(() => playableMatches[0] ?? null);
 
-    async function fetchBracketData() {
-        state.isLoading = true;
-        try {
-            const res = await fetch(
-                `/api/bracket?username=special&is_special_user=true`,
-                {
-                    headers: { Accept: "application/json" },
-                },
-            );
-            if (!res.ok) throw new Error("Network error fetching bracket data");
-
-            const response = FetchBracketResponse.fromJSON(await res.json());
-            bracketState.applyResponse(response);
-        } catch (err) {
-            console.error("Unable to load bracket payload", err);
-        } finally {
-            state.isLoading = false;
-        }
-    }
-
     async function finalizeAndSubmit() {
-        state.isSubmitting = true;
-        const request = SubmitBracketRequest.create({
-            username: "special",
-            predictions: bracketState.predictions,
-        });
-        const body = JSON.stringify(SubmitBracketRequest.toJSON(request));
-
-        try {
-            const res = await fetch("/api/bracket", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body,
-            });
-            if (!res.ok) throw new Error(`Submission failed: ${res.status}`);
-
-            const response = SubmitBracketResponse.fromJSON(await res.json());
-            state.statusMessage = "Bracket persisted to server successfully.";
-
-            if (response.updatedBracket) {
-                bracketState.applyResponse(response.updatedBracket);
-            }
-        } catch (err) {
-            console.error("Bracket submission failed", err);
-            alert("Could not submit your bracket. Please try again.");
-        } finally {
-            state.isSubmitting = false;
-        }
+        await submitBracketState.submitBracket("special", true)
+        state.statusMessage = "Bracket persisted to server successfully.";
     }
 
     async function handleReset() {
         if (bracketState.hasPersistedBracket) {
-            await deletePersistedBracket();
+            await deleteBracketState.deleteBracket("special")
             state.statusMessage = "Server-persisted bracket has been deleted.";
         } else {
             bracketState.clearPredictions();
@@ -98,42 +52,13 @@
         }
     }
 
-    async function deletePersistedBracket() {
-        state.isSubmitting = true;
-        try {
-            const request = DeleteBracketRequest.create({
-                username: "special",
-            });
-            const body = JSON.stringify(DeleteBracketRequest.toJSON(request));
-            const res = await fetch("/api/bracket", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body,
-            });
-            if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-            const response = DeleteBracketResponse.fromJSON(await res.json());
-
-            if (response.updatedBracket) {
-                bracketState.applyResponse(response.updatedBracket);
-            }
-        } catch (err) {
-            console.error("Bracket delete failed", err);
-            alert("Could not reset your server-saved bracket.");
-        } finally {
-            state.isSubmitting = false;
-        }
-    }
-
-    onMount(() => {
-        fetchBracketData();
+    onMount(async () => {
+        fetchBracketState.fetchBracket("special", true)
     });
 </script>
 
 <main class="mobile-viewport">
-    {#if state.isLoading}
+    {#if fetchBracketState.isInProgress}
         <div class="center-flow text-muted">
             Parsing match matrix architecture...
         </div>
@@ -159,7 +84,7 @@
                 {#if bracketState.isLocked}
                     <AccuracyPanel
                         accuracy={bracketState.accuracy}
-                        isSubmitting={state.isSubmitting}
+                        isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
                         onreset={() => {
                             location.reload();
                         }}
@@ -169,7 +94,7 @@
                         {currentMatch}
                         teamNames={bracketState.teamNames}
                         remainingCount={playableMatches.length}
-                        isSubmitting={state.isSubmitting}
+                        isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
                         onselect={(event) =>
                             bracketState.selectWinner(
                                 event.matchId,

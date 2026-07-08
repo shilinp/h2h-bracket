@@ -110,17 +110,19 @@ func seedTeams(teamsList []string) []string {
 
 // clearExistingTournament purges the tables to make room for the new bracket run.
 func (app *App) clearExistingTournament(ctx context.Context, tx pgx.Tx) error {
-	queries := []string{
-		"DELETE FROM match_predictions",
-		"DELETE FROM matches",
-		"DELETE FROM teams",
-		"DELETE FROM global_settings",
+	query := `
+        TRUNCATE TABLE 
+            match_predictions, 
+            matches, 
+            teams, 
+            global_settings 
+        RESTART IDENTITY CASCADE;
+    `
+
+	if _, err := tx.Exec(ctx, query); err != nil {
+		return fmt.Errorf("failed to clear tournament data: %w", err)
 	}
-	for _, query := range queries {
-		if _, err := tx.Exec(ctx, query); err != nil {
-			return fmt.Errorf("Failed to reset database tables")
-		}
-	}
+
 	return nil
 }
 

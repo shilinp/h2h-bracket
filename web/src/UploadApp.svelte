@@ -1,5 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { createBracketState } from "./lib/state/bracket.svelte";
+    import { createFetchBracketState } from "./lib/state/fetchBracket.svelte";
+    import { createSubmitTeamsState } from "./lib/state/submitTeams.svelte";
+
     import {
         SubmitTeamsRequest,
         SubmitTeamsResponse,
@@ -13,14 +17,8 @@
 
     interface UploadState {
         view: View;
-        // Upload view
         teamInput: string;
         pendingTeams: string[];
-        // Preview View
-        bracketData: FetchBracketResponse | null;
-        // Shared
-        isSubmitting: boolean;
-        isLoadingExisting: boolean;
         statusMessage: string | null;
         statusIsError: boolean;
     }
@@ -29,35 +27,17 @@
         view: "upload",
         teamInput: "",
         pendingTeams: [],
-        bracketData: null,
-        isSubmitting: false,
-        isLoadingExisting: false,
         statusMessage: null,
         statusIsError: false,
     });
 
-    let rounds = $derived.by(() => {
-        const matches = state.bracketData?.matches;
-        if (!matches || matches.length === 0) return [];
+    const bracketState = createBracketState();
+    const fetchBracketState = createFetchBracketState(bracketState);
+    const submitTeamsState = createSubmitTeamsState(bracketState);
 
-        const grouped: { round: number; matches: Match[] }[] = [];
-        let currentRound = 0;
-        let startIndex = 0;
-        let matchesInRound = Math.ceil(matches.length / 2);
-
-        while (startIndex < matches.length) {
-            grouped.push({
-                round: currentRound,
-                matches: matches.slice(startIndex, startIndex + matchesInRound),
-            });
-            startIndex += matchesInRound;
-            matchesInRound = Math.max(1, Math.floor(matchesInRound / 2));
-            currentRound++;
-        }
-
-        return grouped;
-    });
-
+    let groupedMatches = $derived.by(
+        () => bracketState.graph.presentationRounds,
+    );
 
     function setStatus(msg: string, isError = false) {
         state.statusMessage = msg;
@@ -68,27 +48,6 @@
         state.statusMessage = null;
         state.statusIsError = false;
     }
-
-    async function postTeams(teams: string[]): Promise<SubmitTeamsResponse> {
-        const req = SubmitTeamsRequest.create({ teams });
-
-        const res = await fetch("/api/teams", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                accept: "application/json",
-            },
-            body: JSON.stringify(SubmitTeamsRequest.toJSON(req)),
-        });
-
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || `HTTP ${res.status}`);
-        }
-
-        return SubmitTeamsResponse.fromJSON(await res.json());
-    }
-
 
     function addTeam() {
         const input = state.teamInput.trim();
@@ -119,48 +78,23 @@
             setStatus("Add at least two teams to create a bracket.", true);
             return;
         }
-        state.isSubmitting = true;
         clearStatus();
-        try {
-            const resp = await postTeams(state.pendingTeams);
-            if (resp.updatedBracket) {
-                state.bracketData = resp.updatedBracket;
-            }
-            state.pendingTeams = [];
-            state.view = "preview";
-            setStatus("Tournament created!");
-        } catch (err: any) {
-            setStatus("Upload failed: " + err.message, true);
-        } finally {
-            state.isSubmitting = false;
-        }
+        await submitTeamsState.submitTeams(state.pendingTeams);
+        state.pendingTeams = [];
+        state.view = "preview";
+        setStatus("Tournament created!");
+        // setStatus("Upload failed: " + err.message, true);
     }
 
     function goToUpload() {
         state.view = "upload";
         state.pendingTeams = [];
-        state.bracketData = null;
         clearStatus();
     }
 
     onMount(async () => {
-        state.isLoadingExisting = true;
-        try {
-            const res = await fetch("/api/bracket?is_special_user=true", {
-                headers: { accept: "application/json" },
-            });
-            if (res.ok) {
-                const bracket = FetchBracketResponse.fromJSON(await res.json());
-                if (bracket.matches && bracket.matches.length > 0) {
-                    state.bracketData = bracket;
-                    state.view = "preview";
-                }
-            }
-        } catch (_) {
-            // No existing tournament — stay on upload view
-        } finally {
-            state.isLoadingExisting = false;
-        }
+        await fetchBracketState.fetchBracket("", true)
+        state.view = "preview";
     });
 </script>
 
@@ -168,10 +102,9 @@
     <div class="upload-page">
         <h1 class="title">🏆 Tournament Setup</h1>
 
-        {#if state.isLoadingExisting}
+        {#if fetchBracketState.isInProgress}
             <div class="loading-msg">Loading existing tournament...</div>
         {:else if state.view === "upload"}
-            <!-- ── Upload view ── -->
             <div class="section-card">
                 <h2 class="section-title">Add Teams</h2>
                 <p class="section-hint">
@@ -186,11 +119,11 @@
                         onkeypress={handleKeyPress}
                         placeholder="Team name..."
                         class="form-input"
-                        disabled={state.isSubmitting}
+                        disabled={submitTeamsState.isInProgress}
                     />
                     <button
                         onclick={addTeam}
-                        disabled={state.isSubmitting}
+                        disabled={submitTeamsState.isInProgress}
                         class="btn-add"
                     >
                         Add
@@ -205,7 +138,7 @@
                                 <button
                                     onclick={() => removeTeam(i)}
                                     class="btn-remove"
-                                    disabled={state.isSubmitting}>✕</button
+                                    disabled={submitTeamsState.isInProgress}>✕</button
                                 >
                             </div>
                         {/each}
@@ -230,19 +163,18 @@
 
             <button
                 onclick={submitUpload}
-                disabled={state.isSubmitting || state.pendingTeams.length < 2}
+                disabled={submitTeamsState.isInProgress || state.pendingTeams.length < 2}
                 class="btn-primary"
             >
-                {state.isSubmitting
+                {submitTeamsState.isInProgress
                     ? "Uploading..."
                     : `Upload Tournament (${state.pendingTeams.length} teams)`}
             </button>
         {:else}
-            <!-- ── Preview view ── -->
             <div class="section-card preview-card">
                 <BracketPreview
-                    {rounds}
-                    teamNames={state.bracketData?.teamNames ?? {}}
+                    rounds={groupedMatches}
+                    teamNames={bracketState.teamNames}
                     predictions={{}}
                     masterPredictions={{}}
                     isLocked={false}
@@ -265,7 +197,7 @@
             <div class="action-row">
                 <button
                     onclick={goToUpload}
-                    disabled={state.isSubmitting}
+                    disabled={submitTeamsState.isInProgress}
                     class="btn-secondary flex-1"
                 >
                     Start Fresh
@@ -314,7 +246,6 @@
         padding: 40px 0;
     }
 
-    /* ── Section card ── */
     .section-card {
         background: #1e293b;
         border-radius: 20px;
@@ -325,7 +256,7 @@
     }
 
     .preview-card {
-        padding: 0; /* Let the preview component handle its own padding */
+        padding: 0;
         background: transparent;
     }
 
@@ -341,7 +272,6 @@
         margin: 0;
     }
 
-    /* ── Inputs ── */
     .form-input {
         width: 100%;
         padding: 11px 14px;
@@ -369,7 +299,6 @@
         align-items: center;
     }
 
-    /* ── Team list (upload view) ── */
     .team-list {
         display: flex;
         flex-direction: column;
@@ -400,7 +329,6 @@
         margin: 8px 0 0;
     }
 
-    /* ── Warning ── */
     .warning-box {
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.25);
@@ -411,7 +339,6 @@
         line-height: 1.5;
     }
 
-    /* ── Status ── */
     .status-msg {
         padding: 11px 16px;
         border-radius: 12px;
@@ -428,7 +355,6 @@
         color: #fca5a5;
     }
 
-    /* ── Buttons ── */
     .btn-primary {
         padding: 14px 20px;
         border-radius: 12px;
