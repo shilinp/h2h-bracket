@@ -10,7 +10,9 @@ export function createSubmitTeamsState(bracketState: ReturnType<typeof createBra
     try {
       const request = SubmitTeamsRequest.create({ teams });
       const response = await api.submitTeams(request);
-      return response;
+      if (response.updatedBracket) {
+        bracketState.applyResponse(response.updatedBracket);
+      }
     } catch (err) {
       console.error("Failed to upload team matrix architecture:", err);
       throw err;
