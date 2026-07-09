@@ -15,7 +15,7 @@
         <p>Matches are already underway. Modifications are suspended.</p>
         {#if accuracy !== null}
             <p class="accuracy-score">
-                Prediction Score: {accuracy.toFixed(0)}
+                Prediction Score: {accuracy.toFixed(2)}%
             </p>
         {/if}
     </div>

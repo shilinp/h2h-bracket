@@ -207,20 +207,26 @@ func (app *App) loadMasterDataAndAccuracy(ctx context.Context, resp *proto.Fetch
 	// Calculate NCAA scored accuracy if both user and master predictions exist
 	if len(resp.Predictions) > 0 && len(resp.MasterPredictions) > 0 {
 		var totalPoints float64
+		var maxRoundNumber int32
 
 		for matchID, userPick := range resp.Predictions {
+			pos, posExists := resp.MatchPositions[matchID]
+			if posExists && pos.RoundNumber >= maxRoundNumber {
+				maxRoundNumber = pos.RoundNumber
+			}
 			if masterPick, matchExists := resp.MasterPredictions[matchID]; matchExists {
 				if userPick == masterPick {
-					if pos, posExists := resp.MatchPositions[matchID]; posExists && pos.RoundNumber > 0 {
+					if posExists && pos.RoundNumber >= 0 {
 						// NCAA scoring: 2^(round - 1)
 						points := 1 << (pos.RoundNumber)
 						totalPoints += float64(points)
 					}
 				}
 			}
-		}
-		resp.Accuracy = &totalPoints
-	}
 
+		}
+		accuracy := (totalPoints / float64((maxRoundNumber+1)*(1<<maxRoundNumber))) * 100
+		resp.Accuracy = &accuracy
+	}
 	return nil
 }
