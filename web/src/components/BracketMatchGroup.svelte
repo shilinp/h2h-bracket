@@ -81,14 +81,12 @@
         flex: 1;
         flex-direction: column;
         justify-content: center;
-        min-height: 115px;
+        min-height: 140px; 
     }
     .match-container {
         display: flex;
         flex-direction: column;
-        gap: 8px;
         width: 100%;
-        background-color: #1a1f2e;
         position: relative;
         z-index: 2;
     }

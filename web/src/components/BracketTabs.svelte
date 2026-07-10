@@ -35,33 +35,31 @@
 <style>
     .tabs-container {
         display: flex;
-        gap: 12px;
-        padding: 20px 24px;
+        gap: 8px;
         overflow-x: auto;
         scrollbar-width: none;
         flex-shrink: 0;
         position: sticky;
         top: 0;
-        background-color: #1a1f2e;
         z-index: 10;
     }
     .tabs-container::-webkit-scrollbar {
         display: none;
     }
     .tab {
-        background: #2a3249;
-        color: #94a3b8;
+        background: #D4D4D4;
+        color: #74777E;
         border: none;
         padding: 10px 20px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 500;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.2s ease;
     }
     .tab.active {
-        background: #6366f1;
+        background: #0E172B;
         color: #ffffff;
     }
 </style>

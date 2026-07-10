@@ -132,9 +132,7 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      sans-serif;
-    background-color: #0b0f19;
+    background-color: #FAF9F6;
     color: #f1f5f9;
     overflow: hidden;
   }
@@ -167,7 +165,7 @@
     height: 100%;
     overflow: hidden;
     gap: 12px;
-    padding: 12px;
+    padding: 1rem;
     box-sizing: border-box;
   }
 

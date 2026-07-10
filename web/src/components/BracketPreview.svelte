@@ -24,7 +24,7 @@
         activeMatchId = null,
     }: Props = $props();
 
-    const BASE_MATCH_HEIGHT = 115;
+    const BASE_MATCH_HEIGHT = 140;
     const GAP_WIDTH = 40;
 
     let activeRoundIndex = $state(0);
@@ -35,11 +35,14 @@
     let matchesInView = $state(rounds[0]?.matches.length ?? 1);
     let pendingMatchesInView = $state<number | null>(null);
 
-    function calculateConnectorHeight(roundIndex: number, currentMatchesInView: number) {
+    function calculateConnectorHeight(
+        roundIndex: number,
+        currentMatchesInView: number,
+    ) {
         const totalCanvasHeight = currentMatchesInView * BASE_MATCH_HEIGHT;
         const matchesInRound = rounds[roundIndex]?.matches.length ?? 1;
         if (matchesInRound <= 1) return 0;
-        return (totalCanvasHeight / matchesInRound) / 2;
+        return totalCanvasHeight / matchesInRound / 2;
     }
 
     function registerMatch(node: HTMLElement, matchId: number) {
@@ -52,8 +55,14 @@
     }
 
     function focusActiveMatch() {
-        if (activeMatchId !== null && matchElements[activeMatchId] && scrollContainer) {
-            const roundIdx = rounds.findIndex((r) => r.matches.some((m) => m.matchId === activeMatchId));
+        if (
+            activeMatchId !== null &&
+            matchElements[activeMatchId] &&
+            scrollContainer
+        ) {
+            const roundIdx = rounds.findIndex((r) =>
+                r.matches.some((m) => m.matchId === activeMatchId),
+            );
 
             if (roundIdx !== -1) {
                 const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
@@ -74,12 +83,19 @@
                 if (!scrollContainer) return;
                 const el = matchElements[activeMatchId!];
                 if (el) {
-                    const bracketContent = scrollContainer.querySelector(".bracket-content");
-                    const columnEl = bracketContent?.children[roundIdx] as HTMLElement;
+                    const bracketContent =
+                        scrollContainer.querySelector(".bracket-content");
+                    const columnEl = bracketContent?.children[
+                        roundIdx
+                    ] as HTMLElement;
                     const elRect = el.getBoundingClientRect();
                     const viewRect = scrollContainer.getBoundingClientRect();
 
-                    const scrollTop = scrollContainer.scrollTop + (elRect.top - viewRect.top) - viewRect.height / 2 + elRect.height / 2;
+                    const scrollTop =
+                        scrollContainer.scrollTop +
+                        (elRect.top - viewRect.top) -
+                        viewRect.height / 2 +
+                        elRect.height / 2;
 
                     scrollContainer.scrollTo({
                         left: columnEl?.offsetLeft ?? 0,
@@ -114,7 +130,8 @@
         }
 
         if (scrollContainer) {
-            const bracketContent = scrollContainer.querySelector(".bracket-content");
+            const bracketContent =
+                scrollContainer.querySelector(".bracket-content");
             const columnEl = bracketContent?.children[index] as HTMLElement;
             if (columnEl) {
                 scrollContainer.scrollTo({
@@ -141,11 +158,7 @@
 </script>
 
 <div class="bracket-app">
-    <BracketTabs 
-        {rounds} 
-        {activeRoundIndex} 
-        onSelectRound={selectRound} 
-    />
+    <BracketTabs {rounds} {activeRoundIndex} onSelectRound={selectRound} />
 
     <div
         class="bracket-viewport"
@@ -168,7 +181,10 @@
                             {matchesInView}
                             selected={predictions[match.matchId]}
                             masterWinner={masterPredictions[match.matchId]}
-                            computedLineHeight={calculateConnectorHeight(i, matchesInView)}
+                            computedLineHeight={calculateConnectorHeight(
+                                i,
+                                matchesInView,
+                            )}
                             isActiveMatch={activeMatchId === match.matchId}
                             {isLocked}
                             gapWidth={GAP_WIDTH}
@@ -187,33 +203,35 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        background-color: #1a1f2e;
-        border-radius: 24px;
+        background-color: #faf9f6;
+        border-radius: 1.5rem;
+        border: 0.0625rem solid #eeeeef;
+        padding-top: 1rem;
+        padding-left: 1rem;
         width: 100%;
         height: 100%;
         min-height: 80vh;
         overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .bracket-viewport {
         flex: 1;
         overflow-x: hidden;
         overflow-y: auto;
-        padding: 0 16px;
+
+        margin: 1rem 0px 0px 0px;
+
         position: relative;
         scroll-behavior: smooth;
     }
     .bracket-content {
         display: flex;
-        height: calc(var(--max-matches) * 115px);
+        height: calc(var(--max-matches) * 140px);
         transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        padding-top: 20px;
-        padding-bottom: 80px;
     }
     .round-column {
         display: flex;
         flex-direction: column;
-        min-width: 260px;
+        min-width: 280px;
         height: 100%;
         flex-shrink: 0;
         overflow: visible;
