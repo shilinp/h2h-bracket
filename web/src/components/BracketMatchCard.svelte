@@ -194,22 +194,20 @@
     /* BracketMatchCard.svelte */
 
     .match-card {
-        background: #ffffff;
-        border-radius: 16px;
+        background: #C9CFC5;
+        border-radius: .75rem;
         overflow: hidden;
         display: flex;
         flex-direction: column;
 
         /* 1. Set a default 3px transparent border so layout doesn't shift when active */
-        border: 3px solid transparent;
+        border: .0625rem solid #E8E7E6;
 
         transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
     .match-card.active-match {
-        /* 2. Match the deep navy color and thick stroke from your image */
-        border-color: #0e172b;
+        border: .125rem solid var(--dark-navy-blue);
 
         /* 3. Keep the soft drop shadow from the mockup design */
         box-shadow: 0 8px 24px rgba(14, 23, 43, 0.12);
@@ -220,7 +218,7 @@
         align-items: center;
         padding: 16px;
         background: #ffffff;
-        color: #1e293b;
+        color: var(--dark-navy-blue);
         transition:
             background-color 0.2s ease,
             color 0.2s ease;
@@ -251,8 +249,8 @@
         opacity: 0.3;
     }
     .team-name {
-        font-size: 1rem;
-        font-weight: 600;
+        font-size: 0.9375rem;
+        font-weight: 500;
     }
     .team-name.strikethrough {
         text-decoration: line-through;

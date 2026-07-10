@@ -59,7 +59,7 @@
         transition: all 0.2s ease;
     }
     .tab.active {
-        background: #0E172B;
-        color: #ffffff;
+        background: var(--dark-navy-blue);
+        color: var(--white);
     }
 </style>
