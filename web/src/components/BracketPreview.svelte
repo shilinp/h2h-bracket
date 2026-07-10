@@ -1,4 +1,3 @@
-<!-- BracketPreview.svelte -->
 <script lang="ts">
     import { tick } from "svelte";
     import type { Match, MatchPosition } from "../lib/proto/bracket";
@@ -24,8 +23,12 @@
         activeMatchId = null,
     }: Props = $props();
 
-    const BASE_MATCH_HEIGHT = 140;
-    const GAP_WIDTH = 40;
+    // 1. Horizontal gap between rounds: 2rem = 32px
+    const GAP_WIDTH = 32; 
+    
+    // 2. Decreasing this from 140px brings the matches vertically closer together
+    // while keeping the canvas connector logic perfectly aligned.
+    const BASE_MATCH_HEIGHT = 120; 
 
     let activeRoundIndex = $state(0);
     let matchElements = $state<Record<number, HTMLElement>>({});
@@ -63,7 +66,6 @@
             const roundIdx = rounds.findIndex((r) =>
                 r.matches.some((m) => m.matchId === activeMatchId),
             );
-
             if (roundIdx !== -1) {
                 const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
                 const isFinalRound = roundIdx === rounds.length - 1;
@@ -88,6 +90,7 @@
                     const columnEl = bracketContent?.children[
                         roundIdx
                     ] as HTMLElement;
+                
                     const elRect = el.getBoundingClientRect();
                     const viewRect = scrollContainer.getBoundingClientRect();
 
@@ -116,10 +119,8 @@
     function selectRound(index: number) {
         isUserNavigating = true;
         activeRoundIndex = index;
-
         const targetMatches = rounds[index]?.matches.length ?? 1;
         const isFinalRound = index === rounds.length - 1;
-
         if (targetMatches > matchesInView) {
             matchesInView = targetMatches;
             pendingMatchesInView = null;
@@ -167,30 +168,32 @@
     >
         <div
             class="bracket-content"
-            style="--max-matches: {matchesInView}; gap: {GAP_WIDTH}px;"
+            style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
         >
             {#each rounds as group, i}
                 <div class="round-column">
                     {#each group.matches as match, matchIdx}
-                        <BracketMatchGroup
-                            {match}
-                            {matchIdx}
-                            roundIndex={i}
-                            totalRounds={rounds.length}
-                            {activeRoundIndex}
-                            {matchesInView}
-                            selected={predictions[match.matchId]}
-                            masterWinner={masterPredictions[match.matchId]}
-                            computedLineHeight={calculateConnectorHeight(
-                                i,
-                                matchesInView,
-                            )}
-                            isActiveMatch={activeMatchId === match.matchId}
-                            {isLocked}
-                            gapWidth={GAP_WIDTH}
-                            {teamNames}
-                            {registerMatch}
-                        />
+                        <div class="match-wrapper">
+                            <BracketMatchGroup
+                                {match}
+                                {matchIdx}
+                                roundIndex={i}
+                                totalRounds={rounds.length}
+                                {activeRoundIndex}
+                                {matchesInView}
+                                selected={predictions[match.matchId]}
+                                masterWinner={masterPredictions[match.matchId]}
+                                computedLineHeight={calculateConnectorHeight(
+                                    i,
+                                    matchesInView,
+                                )}
+                                isActiveMatch={activeMatchId === match.matchId}
+                                {isLocked}
+                                gapWidth={GAP_WIDTH}
+                                {teamNames}
+                                {registerMatch}
+                            />
+                        </div>
                     {/each}
                 </div>
             {/each}
@@ -203,9 +206,9 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        background-color: #faf9f6;
-        border-radius: 1.5rem;
-        border: 0.0625rem solid #eeeeef;
+        background-color: var(--background);
+        border-radius: 20px;
+        border: 1px solid var(--bracket-container-border);
         padding-top: 1rem;
         padding-left: 1rem;
         width: 100%;
@@ -225,15 +228,24 @@
     }
     .bracket-content {
         display: flex;
-        height: calc(var(--max-matches) * 140px);
+        height: calc(var(--max-matches) * var(--match-height));
         transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
     .round-column {
         display: flex;
         flex-direction: column;
+        justify-content: space-around;
         min-width: 280px;
         height: 100%;
         flex-shrink: 0;
         overflow: visible;
+    }
+    /* Strictly locks the outer boundary box height to match the mathematical grid */
+    .match-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: var(--match-height);
+        width: 100%;
     }
 </style>

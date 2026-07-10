@@ -194,29 +194,27 @@
     /* BracketMatchCard.svelte */
 
     .match-card {
-        background: #C9CFC5;
-        border-radius: .75rem;
+        background: var(--bracket-background);
+        border-radius: 12px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
 
-        /* 1. Set a default 3px transparent border so layout doesn't shift when active */
-        border: .0625rem solid #E8E7E6;
+        border: 1px solid var(--bracket-container-border);
 
         transition: all 0.2s ease;
     }
 
     .match-card.active-match {
-        border: .125rem solid var(--dark-navy-blue);
+        border: 2px solid var(--dark-navy-blue);
 
-        /* 3. Keep the soft drop shadow from the mockup design */
         box-shadow: 0 8px 24px rgba(14, 23, 43, 0.12);
     }
     .team-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 16px;
+        padding: .75rem;
         background: #ffffff;
         color: var(--dark-navy-blue);
         transition:
@@ -224,16 +222,16 @@
             color 0.2s ease;
     }
     .team-row:first-child {
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: .1px solid var(--border);
     }
-    /* Neon Highlight State */
+
     .team-row.winner {
-        background: #dfff2e;
-        color: #000000;
+        background: var(--neon-yellow-lime);
+        color: var(--dark-navy-blue);
     }
-    /* Muted Loser State */
+
     .team-row.loser {
-        color: #94a3b8;
+        color: var(--disabled-content);
     }
     .team-identity {
         display: flex;

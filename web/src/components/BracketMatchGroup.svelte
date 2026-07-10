@@ -1,4 +1,3 @@
-<!-- BracketMatchGroup.svelte -->
 <script lang="ts">
     import type { Match } from "../lib/proto/bracket";
     import BracketMatchCard from "./BracketMatchCard.svelte";
@@ -42,6 +41,7 @@
 <div
     class="match-wrapper"
     class:out-of-scroll-bounds={roundIndex !== activeRoundIndex && matchIdx >= matchesInView}
+    class:active-match={isActiveMatch} 
     use:registerMatch={match.matchId}
 >
     <div class="match-container">
@@ -56,18 +56,24 @@
     </div>
 
     {#if roundIndex < totalRounds - 1}
-        <BracketConnector
-            type={roundIndex > 0 ? "both" : "outgoing"}
-            isEven={matchIdx % 2 === 0}
-            lineHeight={computedLineHeight}
-            gapWidth={gapWidth}
-        />
-    {:else if roundIndex > 0}
-        <BracketConnector
-            type="incoming"
-            gapWidth={gapWidth}
-        />
-    {/if}
+    <BracketConnector
+        type={roundIndex > 0 ? "both" : "outgoing"}
+        isEven={matchIdx % 2 === 0}
+        lineHeight={computedLineHeight}
+        gapWidth={gapWidth}
+        {isActiveMatch}
+        {roundIndex}
+        {activeRoundIndex}
+    />
+{:else if roundIndex > 0}
+    <BracketConnector
+        type="incoming"
+        gapWidth={gapWidth}
+        {isActiveMatch}
+        {roundIndex}
+        {activeRoundIndex}
+    />
+{/if}
 </div>
 
 <style>
@@ -83,6 +89,7 @@
         justify-content: center;
         min-height: 140px; 
     }
+
     .match-container {
         display: flex;
         flex-direction: column;
