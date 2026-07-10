@@ -79,10 +79,10 @@
 
 <style>
     .picker-panel {
-        background: #ededf0;
-        border: 1px solid #e1e4e8;
-        border-radius: 36px;
-        padding: 40px 32px;
+        background: var(--match-picker-container-background);
+        border: 1px solid var(--match-picker-container-border);
+        border-radius: 20px;
+        padding: 1.5rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -90,20 +90,19 @@
         max-width: 600px;
         aspect-ratio: 1.5 / 1;
         box-sizing: border-box;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     .picker-heading {
-        color: #0f172a;
-        font-size: 1.4rem;
-        font-weight: 600;
+        color: var(--dark-navy-blue);
+        font-size: 1rem;
+        font-weight: 500;
         text-align: center;
         margin: 0;
     }
 
     .choice-row {
         display: flex;
-        gap: 20px;
+        gap: 1.5rem;
         width: 100%;
         flex: 1;
         margin-top: 16px;
@@ -116,44 +115,31 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 16px;
-        border-radius: 28px;
-        border: none;
+        gap: 1rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
         background: #ffffff;
-        color: #0f172a;
-        cursor: pointer;
-        padding: 20px;
+        color: var(--dark-navy-blue);
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 1rem;
         box-sizing: border-box;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-    }
-
-    .choice-pane:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-
-    .choice-pane:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
     }
 
     .choice-icon {
         width: 56px;
         height: 56px;
-        color: #0f172a;
+        color: var(--dark-navy-blue);
         flex-shrink: 0;
     }
 
     .team-name {
-        font-size: 1.15rem;
-        font-weight: 600;
+        font-size: 1rem;
         text-align: center;
-        line-height: 1.3;
         width: 100%;
-        word-wrap: break-word;
-        white-space: normal;
-        color: #0f172a;
+        overflow-wrap: break-word;
+        color: var(--dark-navy-blue);
     }
 
     .picker-empty {
@@ -201,10 +187,6 @@
         font-size: 0.95rem;
         cursor: pointer;
         transition: background 0.15s;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background: #1e293b;
     }
 
     .btn-text {
