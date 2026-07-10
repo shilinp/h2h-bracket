@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Match } from '../lib/proto/bracket';
+    import MatchIcon from "./MatchIcon.svelte"; // 1. Import the icon component
 
     interface Props {
         currentMatch?: (Match & { roundNumber?: number }) | null;
@@ -37,15 +38,7 @@
                 onclick={() => chooseWinner(currentMatch.team1Id)}
                 disabled={isSubmitting}
             >
-                <!-- Burger Icon -->
-                <svg class="choice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 11c0-2.2 1.8-4 4-4h10c2.2 0 4 1.8 4 4v2H3v-2z" />
-                    <path d="M3 17c0 2.2 1.8 4 4 4h10c2.2 0 4-1.8 4-4v-2H3v2z" />
-                    <path d="M2 14h20" />
-                    <circle cx="7" cy="10" r="0.5" fill="currentColor"/>
-                    <circle cx="12" cy="9" r="0.5" fill="currentColor"/>
-                    <circle cx="16" cy="10" r="0.5" fill="currentColor"/>
-                </svg>
+                <MatchIcon teamId={currentMatch.team1Id} sizePx={48}/>
                 <span class="team-name">{currentMatch.team1Id != null ? (teamNames[currentMatch.team1Id] ?? 'TBD') : 'TBD'}</span>
             </button>
 
@@ -54,11 +47,7 @@
                 onclick={() => chooseWinner(currentMatch.team2Id)}
                 disabled={isSubmitting}
             >
-                <!-- Sandwich Icon -->
-                <svg class="choice-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 19h14l4-10H7L3 19z" opacity="0.15"/>
-                    <path d="M19.3 8.3L15 4.1c-.4-.4-1-.4-1.4 0l-10 10c-.2.2-.3.5-.3.8V19c0 .6.4 1 1 1h4.1c.3 0 .5-.1.7-.3l10.2-10.2c.4-.4.4-1 0-1.2zm-5 1.3l-1.4-1.4 1.4-1.4 1.4 1.4-1.4 1.4z" fill="currentColor"/>
-                </svg>
+                <MatchIcon teamId={currentMatch.team2Id} sizePx={48} />
                 <span class="team-name">{currentMatch.team2Id != null ? (teamNames[currentMatch.team2Id] ?? 'TBD') : 'TBD'}</span>
             </button>
         </div>
@@ -125,13 +114,6 @@
         padding: 1rem;
         box-sizing: border-box;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .choice-icon {
-        width: 56px;
-        height: 56px;
-        color: var(--dark-navy-blue);
-        flex-shrink: 0;
     }
 
     .team-name {

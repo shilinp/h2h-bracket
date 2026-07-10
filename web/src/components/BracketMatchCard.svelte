@@ -1,6 +1,7 @@
 <!-- BracketMatchCard.svelte -->
 <script lang="ts">
     import type { Match } from "../lib/proto/bracket";
+    import MatchIcon from "./MatchIcon.svelte";
 
     interface Props {
         match: Match;
@@ -35,25 +36,7 @@
             selected !== match.team1Id}
     >
         <div class="team-identity">
-            <!-- Universal icon placeholder matching layout -->
-            <svg
-                class="team-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"
-                />
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 8v4l3 3"
-                />
-            </svg>
+            <MatchIcon teamId={match.team1Id} sizePx={24} />
             <span
                 class="team-name"
                 class:strikethrough={isLocked &&
@@ -114,24 +97,7 @@
             selected !== match.team2Id}
     >
         <div class="team-identity">
-            <svg
-                class="team-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"
-                />
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 8v4l3 3"
-                />
-            </svg>
+            <MatchIcon teamId={match.team2Id} sizePx={24} />
             <span
                 class="team-name"
                 class:strikethrough={isLocked &&
@@ -238,14 +204,13 @@
         align-items: center;
         gap: 14px;
     }
-    .team-icon {
-        width: 20px;
-        height: 20px;
-        opacity: 0.7;
+    /* .team-icon {
+        width: 24px;
+        height: 24px;
     }
     .team-row.loser .team-icon {
-        opacity: 0.3;
-    }
+        clear: var(--disabled-content);
+    } */
     .team-name {
         font-size: 0.9375rem;
         font-weight: 500;
