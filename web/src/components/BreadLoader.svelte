@@ -1,23 +1,12 @@
 <script>
-  // You can pass a custom size prop if you want to scale it
   export let size = 200;
 </script>
 
 <div class="loader-container" style="--size: {size}px;">
   <div class="spinner-wrapper">
     <svg viewBox="0 0 100 100" class="spinner-svg">
-      <circle 
-        cx="50" 
-        cy="50" 
-        r="40" 
-        class="track"
-      />
-      <circle 
-        cx="50" 
-        cy="50" 
-        r="40" 
-        class="indicator"
-      />
+      <circle cx="50" cy="50" r="40" class="track" />
+      <circle cx="50" cy="50" r="40" class="indicator" />
     </svg>
     
     <div class="icon-container">
@@ -25,17 +14,16 @@
     </div>
   </div>
 
-  <p class="loading-text">Bread-y in a second</p>
+  <p class="loading-text">Bread-y in a second..</p>
 </div>
 
 <style>
-
   .loader-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-family);
+    font-family: var(--font-family, sans-serif);
     width: var(--size);
     text-align: center;
   }
@@ -46,38 +34,40 @@
     height: var(--size);
   }
 
+  /* The entire SVG rotates, keeping the gaps perfectly intact */
   .spinner-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg); /* Start from the top */
-    animation: spin 2s linear infinite;
+    animation: spin 1.5s linear infinite;
   }
 
-  /* Base circle properties */
+  /* Base properties for both lines */
   circle {
     fill: none;
     stroke-width: 8;
     stroke-linecap: round;
   }
 
-  /* Dark track covering roughly 75% of the circle */
+  /* * Circumference = 2 * pi * 40 = ~251.3 
+   * We draw a solid line for 175, and leave the remaining 76.3 as a gap.
+  */
   .track {
-    stroke: var(--dark-navy-blue);
-    stroke-dasharray: 251.2; /* 2 * PI * R (2 * 3.1415 * 40) */
-    stroke-dashoffset: 62.8; /* Hides 25% of the loop, creating the gap */
+    stroke: var(--dark-navy-blue, #121A2F);
+    stroke-dasharray: 175 76.3; 
+    stroke-dashoffset: 0;
   }
 
-  /* Lime indicator covering roughly 20% of the circle */
+  /* * We draw a solid green line for 45, and leave the remaining 206.3 as a gap.
+   * Using a negative offset pushes the green stroke perfectly into the middle 
+   * of the dark track's gap without needing any finicky transform rotations.
+  */
   .indicator {
-    stroke: var(--neon-yellow-lime);
-    stroke-dasharray: 251.2;
-    /* Shows 20% of the track, offsets it to sit in the upper right quadrant */
-    stroke-dashoffset: 201deg; 
-    transform: rotate(110deg);
-    transform-origin: center;
+    stroke: var(--neon-yellow-lime, #A3D11A);
+    stroke-dasharray: 45 206.3;
+    /* Track length (175) + half of the remaining space for the first gap (15.6) = 190.6 */
+    stroke-dashoffset: -190.6; 
   }
 
-  /* Center Icon Styling */
   .icon-container {
     position: absolute;
     top: 50%;
@@ -88,7 +78,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-dark);
   }
 
   .burger-icon {
@@ -96,16 +85,14 @@
     height: 100%;
   }
 
-  /* Text Styling */
   .loading-text {
     margin-top: 1rem;
     font-size: 1.25rem;
     font-weight: 500;
-    color: var(--color-dark);
-    line-height: 1.3;
+    color: var(--dark-navy-blue, #121A2F);
   }
 
-  /* CSS Animation for the spin effect */
+  /* Smooth, continuous rotation */
   @keyframes spin {
     0% {
       transform: rotate(0deg);

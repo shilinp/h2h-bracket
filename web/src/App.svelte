@@ -4,11 +4,11 @@
   import { createFetchBracketState } from "./lib/state/fetchBracket.svelte";
   import { createSubmitBracketState } from "./lib/state/submitBracket.svelte";
   import { createDeleteState } from "./lib/state/deleteBracket.svelte";
-
   import SessionGate from "./components/SessionGate.svelte";
   import BracketPreview from "./components/BracketPreview.svelte";
   import MatchPicker from "./components/MatchPicker.svelte";
   import AccuracyPanel from "./components/AccuracyPanel.svelte";
+  import BreadLoader from "./components/BreadLoader.svelte"; 
   import {
     FetchBracketResponse,
     SubmitBracketRequest,
@@ -80,8 +80,8 @@
   {#if !state.isLoggedIn}
     <SessionGate bind:username={state.username} onsubmit={handleLogin} />
   {:else if fetchBracketState.isInProgress}
-    <div class="center-flow text-muted">
-      Parsing match matrix architecture...
+    <div class="center-flow">
+      <BreadLoader size={180} />
     </div>
   {:else}
     <div class="bracket-page">
@@ -105,8 +105,7 @@
         {#if bracketState.isLocked}
           <AccuracyPanel
             accuracy={bracketState.accuracy}
-            isSubmitting={submitBracketState.isInProgress ||
-              deleteBracketState.isInProgress}
+            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
             onreset={() => {
               location.reload();
             }}
@@ -116,8 +115,7 @@
             {currentMatch}
             teamNames={bracketState.teamNames}
             remainingCount={playableMatches.length}
-            isSubmitting={submitBracketState.isInProgress ||
-              deleteBracketState.isInProgress}
+            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
             onselect={(event) =>
               bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}

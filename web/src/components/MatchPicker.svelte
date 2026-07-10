@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Match } from '../lib/proto/bracket';
-    import MatchIcon from "./MatchIcon.svelte"; // 1. Import the icon component
+    import MatchIcon from "./MatchIcon.svelte";
 
     interface Props {
         currentMatch?: (Match & { roundNumber?: number }) | null;
@@ -22,6 +22,21 @@
         onreset
     }: Props = $props();
 
+    // Track the currently clicked team for the 50ms delay
+    let activeTeamId: number | null = $state(null);
+
+    // Wrapper function to handle the delay and visual state
+    function handleSelect(teamId: number | undefined | null) {
+        if (!currentMatch || teamId == null || isSubmitting) return;
+        
+        activeTeamId = teamId;
+
+        setTimeout(() => {
+            activeTeamId = null;
+            chooseWinner(teamId);
+        }, 100);
+    }
+
     function chooseWinner(teamId: number | undefined | null) {
         if (!currentMatch || teamId == null) return;
         onselect({ matchId: currentMatch.matchId, winnerId: teamId });
@@ -34,8 +49,8 @@
 
         <div class="choice-row">
             <button
-                class="choice-pane"
-                onclick={() => chooseWinner(currentMatch.team1Id)}
+                class="choice-pane {activeTeamId === currentMatch.team1Id ? 'active' : ''}"
+                onclick={() => handleSelect(currentMatch.team1Id)}
                 disabled={isSubmitting}
             >
                 <MatchIcon teamId={currentMatch.team1Id} sizePx={48}/>
@@ -43,8 +58,8 @@
             </button>
 
             <button
-                class="choice-pane"
-                onclick={() => chooseWinner(currentMatch.team2Id)}
+                class="choice-pane {activeTeamId === currentMatch.team2Id ? 'active' : ''}"
+                onclick={() => handleSelect(currentMatch.team2Id)}
                 disabled={isSubmitting}
             >
                 <MatchIcon teamId={currentMatch.team2Id} sizePx={48} />
@@ -114,6 +129,12 @@
         padding: 1rem;
         box-sizing: border-box;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .choice-pane.active {
+        background: var(--neon-yellow-lime);
+        border-color: var(--dark-navy-blue);
+        transition: none; 
     }
 
     .team-name {
