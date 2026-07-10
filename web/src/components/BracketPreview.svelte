@@ -1,5 +1,8 @@
+<!-- BracketPreview.svelte -->
 <script lang="ts">
-    import type { Match, MatchPosition } from '../lib/proto/bracket';
+    import { tick } from "svelte";
+    import type { Match, MatchPosition } from "../lib/proto/bracket";
+    import BracketConnector from "./BracketConnector.svelte";
 
     interface Props {
         rounds: { round: number; matches: Match[] }[];
@@ -11,235 +14,549 @@
         activeMatchId: number | null;
     }
 
-    let { 
+    let {
         rounds = [],
         predictions = {},
         teamNames = {},
         masterPredictions = {},
         matchPositions = {},
         isLocked = false,
-        activeMatchId = null
+        activeMatchId = null,
     }: Props = $props();
+
+    const BASE_MATCH_HEIGHT = 115;
+    const GAP_WIDTH = 40;
+
+    let activeRoundIndex = $state(0);
+    let matchElements = $state<Record<number, HTMLElement>>({});
+    let scrollContainer = $state<HTMLElement | null>(null);
+    let isUserNavigating = $state(false);
+
+    let matchesInView = $state(rounds[0]?.matches.length ?? 1);
+    let pendingMatchesInView = $state<number | null>(null);
+
+    function calculateConnectorHeight(
+        roundIndex: number,
+        currentMatchesInView: number,
+    ) {
+        const totalCanvasHeight = currentMatchesInView * BASE_MATCH_HEIGHT;
+        const matchesInRound = rounds[roundIndex]?.matches.length ?? 1;
+
+        if (matchesInRound <= 1) return 0;
+
+        const cardSpacing = totalCanvasHeight / matchesInRound;
+        return cardSpacing / 2;
+    }
+
+    function registerMatch(node: HTMLElement, matchId: number) {
+        matchElements[matchId] = node;
+        return {
+            destroy() {
+                delete matchElements[matchId];
+            },
+        };
+    }
+
+    function focusActiveMatch() {
+        if (
+            activeMatchId !== null &&
+            matchElements[activeMatchId] &&
+            scrollContainer
+        ) {
+            const roundIdx = rounds.findIndex((r) =>
+                r.matches.some((m) => m.matchId === activeMatchId),
+            );
+
+            if (roundIdx !== -1) {
+                const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
+                const isFinalRound = roundIdx === rounds.length - 1;
+
+                if (targetMatches > matchesInView) {
+                    matchesInView = targetMatches;
+                    pendingMatchesInView = null;
+                } else if (targetMatches < matchesInView) {
+                    if (isFinalRound) {
+                        pendingMatchesInView = null;
+                    } else {
+                        pendingMatchesInView = targetMatches;
+                    }
+                } else {
+                    pendingMatchesInView = null;
+                }
+
+                activeRoundIndex = roundIdx;
+            }
+
+            tick().then(() => {
+                if (!scrollContainer) return;
+
+                const el = matchElements[activeMatchId];
+                if (el) {
+                    const bracketContent =
+                        scrollContainer.querySelector(".bracket-content");
+                    const columnEl = bracketContent?.children[
+                        roundIdx
+                    ] as HTMLElement;
+
+                    const elRect = el.getBoundingClientRect();
+                    const viewRect = scrollContainer.getBoundingClientRect();
+
+                    const scrollTop =
+                        scrollContainer.scrollTop +
+                        (elRect.top - viewRect.top) -
+                        viewRect.height / 2 +
+                        elRect.height / 2;
+
+                    scrollContainer.scrollTo({
+                        left: columnEl?.offsetLeft ?? 0,
+                        top: scrollTop,
+                        behavior: "smooth",
+                    });
+                }
+            });
+        }
+    }
+
+    $effect(() => {
+        if (activeMatchId !== null && !isUserNavigating) {
+            focusActiveMatch();
+        }
+    });
+
+    function selectRound(index: number) {
+        isUserNavigating = true;
+        activeRoundIndex = index;
+
+        const targetMatches = rounds[index]?.matches.length ?? 1;
+        const isFinalRound = index === rounds.length - 1;
+
+        if (targetMatches > matchesInView) {
+            matchesInView = targetMatches;
+            pendingMatchesInView = null;
+        } else if (targetMatches < matchesInView) {
+            if (isFinalRound) {
+                pendingMatchesInView = null;
+            } else {
+                pendingMatchesInView = targetMatches;
+            }
+        } else {
+            pendingMatchesInView = null;
+        }
+
+        if (scrollContainer) {
+            const bracketContent =
+                scrollContainer.querySelector(".bracket-content");
+            const columnEl = bracketContent?.children[index] as HTMLElement;
+            if (columnEl) {
+                scrollContainer.scrollTo({
+                    left: columnEl.offsetLeft,
+                    top: 0,
+                    behavior: "smooth",
+                });
+            }
+        }
+    }
+
+    function handleScrollEnd() {
+        if (pendingMatchesInView !== null) {
+            matchesInView = pendingMatchesInView;
+            pendingMatchesInView = null;
+        }
+    }
+
+    $effect(() => {
+        if (activeMatchId !== null) {
+            isUserNavigating = false;
+        }
+    });
+
+    function getRoundName(index: number, totalRounds: number) {
+        if (index === totalRounds - 1) return "Finals";
+        if (index === totalRounds - 2) return "Semifinals";
+        if (index === totalRounds - 3) return "Quarterfinals";
+        const remainingRounds = totalRounds - index;
+        const roundOf = 1 << remainingRounds;
+
+        return `Round of ${roundOf}`;
+    }
 </script>
 
-<div class="preview-shell">
-    <div class="preview-header">
-        <h2>Bracket Preview</h2>
-        <p>
-            {isLocked
-                ? "Locked bracket view showing your selected winners and locked results."
-                : "Watch your bracket fill out as you choose winners."}
-        </p>
+<div class="bracket-app">
+    <div class="tabs-container">
+        {#each rounds as group, i}
+            <button
+                class="tab"
+                class:active={activeRoundIndex === i}
+                onclick={() => selectRound(i)}
+            >
+                {getRoundName(i, rounds.length)}
+            </button>
+        {/each}
     </div>
 
-    <div class="round-grid">
-        {#each rounds as group}
-            <div class="round-column">
-                <!-- Visual conversion from 0-indexed round to 1-indexed view -->
-                <div class="round-label">Round {group.round + 1}</div>
-                <div class="column-matches">
-                    {#each group.matches as match}
+    <div
+        class="bracket-viewport"
+        bind:this={scrollContainer}
+        onscrollend={handleScrollEnd}
+    >
+        <div
+            class="bracket-content"
+            style="--max-matches: {matchesInView}; gap: {GAP_WIDTH}px;"
+        >
+            {#each rounds as group, i}
+                <div class="round-column">
+                    {#each group.matches as match, matchIdx}
                         {@const selected = predictions[match.matchId]}
                         {@const masterWinner = masterPredictions[match.matchId]}
+                        {@const computedLineHeight = calculateConnectorHeight(
+                            i,
+                            matchesInView,
+                        )}
+                        {@const isActiveMatch = activeMatchId === match.matchId}
+
                         <div
-                            class="match-card"
-                            class:selected={selected != null && !isLocked}
-                            class:active={activeMatchId === match.matchId}
-                            class:locked={isLocked}
+                            class="match-wrapper"
+                            class:out-of-scroll-bounds={i !==
+                                activeRoundIndex && matchIdx >= matchesInView}
+                            use:registerMatch={match.matchId}
                         >
-                            <!-- Traditional Bracket Connective UI Structure -->
-                            <div class="bracket-node-team team-top">
-                                <span class="team-name" class:strikethrough={isLocked && masterWinner != null && selected === match.team1Id && selected !== masterWinner}>
-                                    {match.team1Id != null ? (teamNames[match.team1Id] ?? 'TBD') : "TBD"}
-                                </span>
-                                {#if selected != null && selected === match.team1Id && !isLocked}
-                                    <span class="indicator-dot"></span>
-                                {/if}
-                            </div>
-                            
-                            <div class="bracket-connector-rail">
-                                <span class="vs-text">VS</span>
-                            </div>
+                            <div class="match-container">
+                                <div
+                                    class="match-card"
+                                    class:locked={isLocked}
+                                    class:active-match={isActiveMatch}
+                                >
+                                    <!-- Team 1 Row -->
+                                    <div
+                                        class="team-row"
+                                        class:winner={match.team1Id != null &&
+                                            selected === match.team1Id}
+                                    >
+                                        <div class="team-identity">
+                                            <span
+                                                class="team-name"
+                                                class:strikethrough={isLocked &&
+                                                    masterWinner != null &&
+                                                    selected ===
+                                                        match.team1Id &&
+                                                    selected !== masterWinner}
+                                            >
+                                                {match.team1Id != null
+                                                    ? (teamNames[
+                                                          match.team1Id
+                                                      ] ?? "TBD")
+                                                    : "TBD"}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="status-indicator"
+                                            class:winner={match.team1Id !=
+                                                null &&
+                                                selected === match.team1Id}
+                                        >
+                                            {#if match.team1Id != null && selected != null}
+                                                {#if selected === match.team1Id}
+                                                    <!-- Checkmark for Win -->
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="3"
+                                                        width="16"
+                                                        height="16"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M5 13l4 4L19 7"
+                                                        />
+                                                    </svg>
+                                                {:else}
+                                                    <!-- X for Loss (Only if the other team was selected) -->
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="3"
+                                                        width="14"
+                                                        height="14"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M6 18L18 6M6 6l12 12"
+                                                        />
+                                                    </svg>
+                                                {/if}
+                                            {/if}
+                                        </div>
+                                    </div>
 
-                            <div class="bracket-node-team team-bottom">
-                                <span class="team-name" class:strikethrough={isLocked && masterWinner != null && selected === match.team2Id && selected !== masterWinner}>
-                                    {match.team2Id != null ? (teamNames[match.team2Id] ?? 'TBD') : "TBD"}
-                                </span>
-                                {#if selected != null && selected === match.team2Id && !isLocked}
-                                    <span class="indicator-dot"></span>
-                                {/if}
-                            </div>
+                                    <!-- Team 2 Row -->
+                                    <div
+                                        class="team-row"
+                                        class:winner={match.team2Id != null &&
+                                            selected === match.team2Id}
+                                    >
+                                        <div class="team-identity">
+                                            <span
+                                                class="team-name"
+                                                class:strikethrough={isLocked &&
+                                                    masterWinner != null &&
+                                                    selected ===
+                                                        match.team2Id &&
+                                                    selected !== masterWinner}
+                                            >
+                                                {match.team2Id != null
+                                                    ? (teamNames[
+                                                          match.team2Id
+                                                      ] ?? "TBD")
+                                                    : "TBD"}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="status-indicator"
+                                            class:winner={match.team2Id !=
+                                                null &&
+                                                selected === match.team2Id}
+                                        >
+                                            {#if match.team2Id != null && selected != null}
+                                                {#if selected === match.team2Id}
+                                                    <!-- Checkmark for Win -->
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="3"
+                                                        width="16"
+                                                        height="16"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M5 13l4 4L19 7"
+                                                        />
+                                                    </svg>
+                                                {:else}
+                                                    <!-- X for Loss (Only if the other team was selected) -->
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="3"
+                                                        width="14"
+                                                        height="14"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M6 18L18 6M6 6l12 12"
+                                                        />
+                                                    </svg>
+                                                {/if}
+                                            {/if}
+                                        </div>
+                                    </div>
 
-                            {#if isLocked && masterWinner != null}
-                                {@const isCorrect = selected === masterWinner}
-                                <div class="master-override-pane" class:match-match={isCorrect} class:match-mismatch={!isCorrect}>
-                                    <span class="override-label">Winner: {teamNames[masterWinner] ?? 'TBD'}</span>
+                                    {#if isLocked && masterWinner != null && selected !== masterWinner}
+                                        <div class="master-override">
+                                            Correct: {teamNames[masterWinner] ??
+                                                "TBD"}
+                                        </div>
+                                    {/if}
                                 </div>
+                            </div>
+
+                            {#if i < rounds.length - 1}
+                                <BracketConnector
+                                    type={i > 0 ? "both" : "outgoing"}
+                                    isEven={matchIdx % 2 === 0}
+                                    lineHeight={computedLineHeight}
+                                    gapWidth={GAP_WIDTH}
+                                />
+                            {:else if i > 0}
+                                <BracketConnector
+                                    type="incoming"
+                                    gapWidth={GAP_WIDTH}
+                                />
                             {/if}
                         </div>
                     {/each}
                 </div>
-            </div>
-        {/each}
+            {/each}
+        </div>
     </div>
 </div>
 
 <style>
-    .preview-shell {
-        background: #111827;
-        border-radius: 20px;
-        padding: 16px;
+    .bracket-app {
+        position: relative;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        background-color: #1a1f2e;
+        border-radius: 24px;
         width: 100%;
-        box-sizing: border-box;
+        height: 100%;
+        min-height: 80vh;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            Helvetica, Arial, sans-serif;
     }
 
-    .preview-header {
+    .tabs-container {
         display: flex;
-        flex-direction: column;
-        gap: 4px;
+        gap: 12px;
+        padding: 20px 24px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        background-color: #1a1f2e;
+        z-index: 10;
     }
 
-    .preview-header h2 {
-        margin: 0;
-        font-size: 1.15rem;
-        font-weight: 700;
+    .tabs-container::-webkit-scrollbar {
+        display: none;
     }
 
-    .preview-header p {
-        margin: 0;
+    .tab {
+        background: #2a3249;
         color: #94a3b8;
-        font-size: 0.85rem;
-        line-height: 1.3;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
     }
 
-    .round-grid {
+    .tab.active {
+        background: #6366f1;
+        color: #ffffff;
+    }
+
+    .bracket-viewport {
+        flex: 1;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 0 16px;
+        position: relative;
+        scroll-behavior: smooth;
+    }
+
+    .bracket-content {
         display: flex;
-        flex-direction: column;
-        gap: 20px;
-        width: 100%;
+        height: calc(var(--max-matches) * 115px);
+        transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        padding-top: 20px;
+        padding-bottom: 80px;
     }
 
     .round-column {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        min-width: 260px;
+        height: 100%;
+        flex-shrink: 0;
+        overflow: visible;
+    }
+
+    .match-wrapper.out-of-scroll-bounds {
+        display: none !important;
+    }
+
+    .match-wrapper {
+        position: relative;
         width: 100%;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 115px;
     }
 
-    .round-label {
-        font-weight: 800;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #3b82f6;
-    }
-
-    .column-matches {
+    .match-container {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
+        width: 100%;
+        background-color: #1a1f2e;
+        position: relative;
+        z-index: 2;
     }
 
     .match-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
+        background: #2a3249;
         border-radius: 12px;
-        padding: 0;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease;
     }
 
-    .match-card.active {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    .match-card.active-match {
+        border-color: #6366f1;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
     }
 
-    .match-card.selected {
-        border-color: #10b981;
+    .team-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #232a3f;
+        transition: background 0.2s;
     }
 
-    .bracket-node-team {
+    .team-row:first-child {
+        background: #181b28;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .team-row.winner {
+        background: #1e2436;
+    }
+
+    .team-identity {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 10px 14px;
-        background: #1e293b;
-        height: 40px;
-        box-sizing: border-box;
-    }
-
-    .team-top {
-        border-bottom: 1px solid #0f172a;
+        gap: 12px;
     }
 
     .team-name {
-        font-size: 0.9rem;
-        font-weight: 600;
         color: #f8fafc;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        flex: 1;
-        padding-right: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
     }
 
     .team-name.strikethrough {
         text-decoration: line-through;
-        color: #ef4444;
-        opacity: 0.8;
+        color: #64748b;
     }
 
-    .indicator-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 555px;
-        background-color: #10b981;
-        flex-shrink: 0;
-    }
-
-    .bracket-connector-rail {
+    .status-indicator {
         display: flex;
         align-items: center;
-        background: #0f172a;
+        justify-content: center;
+        width: 20px;
         height: 20px;
-        padding: 0 14px;
+        color: #64748b;
     }
 
-    .vs-text {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #475569;
-        letter-spacing: 0.05em;
+    .status-indicator.winner {
+        color: #10b981;
     }
 
-    .master-override-pane {
-        padding: 8px 14px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-    }
-
-    .master-override-pane.match-match {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-        border-top: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .master-override-pane.match-mismatch {
-        background: rgba(239, 68, 68, 0.1);
+    .master-override {
+        background: rgba(239, 68, 68, 0.15);
         color: #f87171;
-        border-top: 1px solid rgba(239, 68, 68, 0.15);
-    }
-
-    .override-label {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 0.75rem;
+        text-align: center;
+        padding: 6px;
+        font-weight: 600;
     }
 </style>

@@ -38,13 +38,13 @@
     let currentMatch = $derived.by(() => playableMatches[0] ?? null);
 
     async function finalizeAndSubmit() {
-        await submitBracketState.submitBracket("special", true)
+        await submitBracketState.submitBracket("special", true);
         state.statusMessage = "Bracket persisted to server successfully.";
     }
 
     async function handleReset() {
         if (bracketState.hasPersistedBracket) {
-            await deleteBracketState.deleteBracket("special")
+            await deleteBracketState.deleteBracket("special");
             state.statusMessage = "Server-persisted bracket has been deleted.";
         } else {
             bracketState.clearPredictions();
@@ -53,7 +53,7 @@
     }
 
     onMount(async () => {
-        fetchBracketState.fetchBracket("special", true)
+        fetchBracketState.fetchBracket("special", true);
     });
 </script>
 
@@ -68,7 +68,7 @@
                 <div class="status-banner">{state.statusMessage}</div>
             {/if}
 
-            <div class="preview-scroll-container">
+            <div class="bracket-container">
                 <BracketPreview
                     rounds={groupedMatches}
                     predictions={bracketState.predictions}
@@ -84,7 +84,8 @@
                 {#if bracketState.isLocked}
                     <AccuracyPanel
                         accuracy={bracketState.accuracy}
-                        isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
+                        isSubmitting={submitBracketState.isInProgress ||
+                            deleteBracketState.isInProgress}
                         onreset={() => {
                             location.reload();
                         }}
@@ -94,7 +95,8 @@
                         {currentMatch}
                         teamNames={bracketState.teamNames}
                         remainingCount={playableMatches.length}
-                        isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
+                        isSubmitting={submitBracketState.isInProgress ||
+                            deleteBracketState.isInProgress}
                         onselect={(event) =>
                             bracketState.selectWinner(
                                 event.matchId,
@@ -155,11 +157,12 @@
         box-sizing: border-box;
     }
 
-    .preview-scroll-container {
+    .bracket-container {
         flex: 1;
-        overflow-y: auto;
+        overflow-y: hidden;
         overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
     }
 
     .status-banner {

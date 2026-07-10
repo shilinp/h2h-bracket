@@ -44,12 +44,13 @@
     if (!state.username.trim()) return;
     localStorage.setItem("bracket_username", state.username);
     state.isLoggedIn = true;
-    await fetchBracketState.fetchBracket(state.username, false)
+    await fetchBracketState.fetchBracket(state.username, false);
   }
 
   async function finalizeAndSubmit() {
-    await submitBracketState.submitBracket(state.username, false)
-    state.statusMessage = "Bracket submission complete. Waiting for master bracket results.";
+    await submitBracketState.submitBracket(state.username, false);
+    state.statusMessage =
+      "Bracket submission complete. Waiting for master bracket results.";
   }
 
   async function handleReset() {
@@ -70,7 +71,7 @@
 
     if (state.username) {
       state.isLoggedIn = true;
-      fetchBracketState.fetchBracket(state.username, false)
+      fetchBracketState.fetchBracket(state.username, false);
     }
   });
 </script>
@@ -88,7 +89,7 @@
         <div class="status-banner">{state.statusMessage}</div>
       {/if}
 
-      <div class="preview-scroll-container">
+      <div class="bracket-container">
         <BracketPreview
           rounds={groupedMatches}
           predictions={bracketState.predictions}
@@ -104,7 +105,8 @@
         {#if bracketState.isLocked}
           <AccuracyPanel
             accuracy={bracketState.accuracy}
-            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
+            isSubmitting={submitBracketState.isInProgress ||
+              deleteBracketState.isInProgress}
             onreset={() => {
               location.reload();
             }}
@@ -114,7 +116,8 @@
             {currentMatch}
             teamNames={bracketState.teamNames}
             remainingCount={playableMatches.length}
-            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
+            isSubmitting={submitBracketState.isInProgress ||
+              deleteBracketState.isInProgress}
             onselect={(event) =>
               bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}
@@ -168,11 +171,12 @@
     box-sizing: border-box;
   }
 
-  .preview-scroll-container {
+  .bracket-container {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: hidden;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
   }
 
   .status-banner {

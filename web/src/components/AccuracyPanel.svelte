@@ -63,20 +63,4 @@
         font-size: 1.05rem;
         font-weight: 700;
     }
-
-    .btn-secondary {
-        margin-top: 16px;
-        background: #475569;
-        color: #f8fafc;
-        border: none;
-        padding: 14px 28px;
-        border-radius: 12px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .btn-secondary:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
 </style>
