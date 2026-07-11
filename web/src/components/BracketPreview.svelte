@@ -174,9 +174,9 @@
             class="bracket-content"
             style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
         >
-            {#each rounds as group, i}
+            {#each rounds as group, i (group.round)}
                 <div class="round-column">
-                    {#each group.matches as match, matchIdx}
+                    {#each group.matches as match, matchIdx (match.matchId)}
                         <div class="match-wrapper">
                             <BracketMatchGroup
                                 {match}
