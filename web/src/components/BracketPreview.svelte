@@ -80,6 +80,7 @@
             }
 
             tick().then(() => {
+                // Wait one additional frame for Safari to finish calculating flexbox layout
                 requestAnimationFrame(() => {
                     if (!scrollContainer) return;
                     const el = matchElements[activeMatchId!];
@@ -101,13 +102,16 @@
                             viewRect.height / 2 +
                             elRect.height / 2;
 
+                        // 1. Find where the column is supposed to be
                         const targetLeft = columnEl?.offsetLeft ?? 0;
                         const currentLeft = scrollContainer.scrollLeft;
 
+                        // 2. Only trigger horizontal scroll if they are actually changing rounds
                         const needsLeftScroll =
                             Math.abs(currentLeft - targetLeft) > 5;
 
                         scrollContainer.scrollTo({
+                            // Spread syntax safely omits the "left" property if we don't need it
                             ...(needsLeftScroll && { left: targetLeft }),
                             top: scrollTop,
                             behavior: "smooth",
@@ -235,7 +239,6 @@
         overflow-x: hidden;
         overflow-y: auto;
         position: relative;
-        scroll-behavior: smooth;
     }
     .bracket-content {
         display: flex;
