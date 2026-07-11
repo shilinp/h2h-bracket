@@ -64,7 +64,11 @@
             const roundIdx = rounds.findIndex((r) =>
                 r.matches.some((m) => m.matchId === activeMatchId),
             );
+            
             if (roundIdx !== -1) {
+                // 1. Check if we are actually advancing to a new column
+                const isChangingRounds = activeRoundIndex !== roundIdx;
+                
                 const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
                 const isFinalRound = roundIdx === rounds.length - 1;
 
@@ -77,24 +81,17 @@
                     pendingMatchesInView = null;
                 }
                 activeRoundIndex = roundIdx;
-            }
 
-            tick().then(() => {
-                // Wait one additional frame for Safari to finish calculating flexbox layout
-                requestAnimationFrame(() => {
+                tick().then(() => {
                     if (!scrollContainer) return;
                     const el = matchElements[activeMatchId!];
-
+                    
                     if (el) {
-                        const bracketContent =
-                            scrollContainer.querySelector(".bracket-content");
-                        const columnEl = bracketContent?.children[
-                            roundIdx
-                        ] as HTMLElement;
+                        const bracketContent = scrollContainer.querySelector(".bracket-content");
+                        const columnEl = bracketContent?.children[roundIdx] as HTMLElement;
 
                         const elRect = el.getBoundingClientRect();
-                        const viewRect =
-                            scrollContainer.getBoundingClientRect();
+                        const viewRect = scrollContainer.getBoundingClientRect();
 
                         const scrollTop =
                             scrollContainer.scrollTop +
@@ -102,23 +99,27 @@
                             viewRect.height / 2 +
                             elRect.height / 2;
 
-                        // 1. Find where the column is supposed to be
                         const targetLeft = columnEl?.offsetLeft ?? 0;
-                        const currentLeft = scrollContainer.scrollLeft;
 
-                        // 2. Only trigger horizontal scroll if they are actually changing rounds
-                        const needsLeftScroll =
-                            Math.abs(currentLeft - targetLeft) > 5;
-
-                        scrollContainer.scrollTo({
-                            // Spread syntax safely omits the "left" property if we don't need it
-                            ...(needsLeftScroll && { left: targetLeft }),
-                            top: scrollTop,
-                            behavior: "smooth",
-                        });
+                        if (isChangingRounds) {
+                            // Advancing to a new round: Smoothly sweep horizontally and vertically
+                            scrollContainer.scrollTo({
+                                left: targetLeft,
+                                top: scrollTop,
+                                behavior: "smooth",
+                            });
+                        } else {
+                            // Same round: Force the X-axis instantly to counter Safari's layout reset,
+                            // and only apply smooth scrolling to the Y-axis.
+                            scrollContainer.scrollLeft = targetLeft; 
+                            scrollContainer.scrollTo({
+                                top: scrollTop,
+                                behavior: "smooth",
+                            });
+                        }
                     }
                 });
-            });
+            }
         }
     }
 
