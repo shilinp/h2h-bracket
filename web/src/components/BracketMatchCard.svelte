@@ -20,7 +20,6 @@
     class:locked={isLocked}
     class:active-match={isActiveMatch}
 >
-    <!-- Team 1 Row -->
     <div
         class="team-row"
         class:winner={match.team1Id != null && selected === match.team1Id}
@@ -29,7 +28,13 @@
             selected !== match.team1Id}
     >
         <div class="team-identity">
-            <MatchIcon teamId={match.team1Id} sizePx={24} />
+            <MatchIcon
+                teamId={match.team1Id}
+                sizePx={24}
+                disabledIcon={match.team1Id != null &&
+                    selected != null &&
+                    selected !== match.team1Id}
+            />
             <span class="team-name">
                 {match.team1Id != null
                     ? (teamNames[match.team1Id] ?? "TBD")
@@ -52,7 +57,6 @@
         </div>
     </div>
 
-    <!-- Team 2 Row -->
     <div
         class="team-row"
         class:winner={match.team2Id != null && selected === match.team2Id}
@@ -61,7 +65,13 @@
             selected !== match.team2Id}
     >
         <div class="team-identity">
-            <MatchIcon teamId={match.team2Id} sizePx={24} />
+            <MatchIcon
+                teamId={match.team2Id}
+                sizePx={24}
+                disabledIcon={match.team2Id != null &&
+                    selected != null &&
+                    selected !== match.team2Id}
+            />
             <span class="team-name">
                 {match.team2Id != null
                     ? (teamNames[match.team2Id] ?? "TBD")

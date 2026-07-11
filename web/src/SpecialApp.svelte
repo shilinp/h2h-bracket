@@ -65,10 +65,6 @@
         </div>
     {:else}
         <div class="bracket-page">
-            {#if state.statusMessage}
-                <div class="status-banner">{state.statusMessage}</div>
-            {/if}
-
             <div class="bracket-container">
                 <BracketPreview
                     rounds={groupedMatches}
@@ -149,17 +145,6 @@
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
-    }
-
-    .status-banner {
-        background: rgba(37, 99, 235, 0.12);
-        border: 1px solid rgba(37, 99, 235, 0.24);
-        color: #c7d2fe;
-        border-radius: 12px;
-        padding: 10px 14px;
-        text-align: center;
-        font-size: 0.9rem;
-        flex-shrink: 0;
     }
 
     .bottom-panel {
