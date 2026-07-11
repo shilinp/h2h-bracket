@@ -63,6 +63,27 @@
         };
     }
 
+    function syncMatchesInViewForRound(roundIndex: number) {
+        const targetMatches = rounds[roundIndex]?.matches.length ?? 1;
+        const isFinalRound = roundIndex === rounds.length - 1;
+
+        if (targetMatches > matchesInView) {
+            matchesInView = targetMatches;
+            pendingMatchesInView = null;
+        } else if (targetMatches < matchesInView) {
+            pendingMatchesInView = isFinalRound ? null : targetMatches;
+        } else {
+            pendingMatchesInView = null;
+        }
+    }
+
+    function applyPendingMatchesInView() {
+        if (pendingMatchesInView !== null) {
+            matchesInView = pendingMatchesInView;
+            pendingMatchesInView = null;
+        }
+    }
+
     function focusActiveMatch() {
         if (
             activeMatchId !== null &&
@@ -74,17 +95,7 @@
             );
 
             if (roundIdx !== -1) {
-                const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
-                const isFinalRound = roundIdx === rounds.length - 1;
-
-                if (targetMatches > matchesInView) {
-                    matchesInView = targetMatches;
-                    pendingMatchesInView = null;
-                } else if (targetMatches < matchesInView) {
-                    pendingMatchesInView = isFinalRound ? null : targetMatches;
-                } else {
-                    pendingMatchesInView = null;
-                }
+                syncMatchesInViewForRound(roundIdx);
                 activeRoundIndex = roundIdx;
 
                 tick().then(() => {
@@ -134,16 +145,7 @@
     function selectRound(index: number) {
         isUserNavigating = true;
         activeRoundIndex = index;
-        const targetMatches = rounds[index]?.matches.length ?? 1;
-        const isFinalRound = index === rounds.length - 1;
-        if (targetMatches > matchesInView) {
-            matchesInView = targetMatches;
-            pendingMatchesInView = null;
-        } else if (targetMatches < matchesInView) {
-            pendingMatchesInView = isFinalRound ? null : targetMatches;
-        } else {
-            pendingMatchesInView = null;
-        }
+        syncMatchesInViewForRound(index);
 
         if (scrollContainer) {
             const bracketContent =
@@ -158,13 +160,14 @@
                 });
             }
         }
+
+        tick().then(() => {
+            applyPendingMatchesInView();
+        });
     }
 
     function handleScrollEnd() {
-        if (pendingMatchesInView !== null) {
-            matchesInView = pendingMatchesInView;
-            pendingMatchesInView = null;
-        }
+        applyPendingMatchesInView();
     }
 
     $effect(() => {
