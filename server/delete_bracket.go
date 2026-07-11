@@ -102,7 +102,10 @@ func (app *App) respondWithFreshBracket(ctx context.Context, w http.ResponseWrit
 		UpdatedBracket: bracketResp,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	data, err := protojson.Marshal(resp)
+	marshaler := protojson.MarshalOptions{
+		EmitDefaultValues: true,
+	}
+	data, err := marshaler.Marshal(resp)
 	if err != nil {
 		http.Error(w, "Failed to serialize response", http.StatusInternalServerError)
 		return

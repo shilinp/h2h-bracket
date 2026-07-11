@@ -26,7 +26,7 @@
 
     // 2. Decreasing this from 140px brings the matches vertically closer together
     // while keeping the canvas connector logic perfectly aligned.
-    const BASE_MATCH_HEIGHT = 120;
+    const BASE_MATCH_HEIGHT = 140;
 
     let activeRoundIndex = $state(0);
     let matchElements = $state<Record<number, HTMLElement>>({});

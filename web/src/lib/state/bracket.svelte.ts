@@ -25,12 +25,12 @@ export function createBracketState() {
       const visualPosition = position?.visualPosition ?? 0;
 
       let team1Id = match.team1Id;
-      if (match.team1PrevMatchId) {
+      if (match.team1PrevMatchId != null) {
         team1Id = predictions[match.team1PrevMatchId] ?? autoWinners[match.team1PrevMatchId] ?? match.team1Id;
       }
 
       let team2Id = match.team2Id;
-      if (match.team2PrevMatchId) {
+      if (match.team2PrevMatchId != null) {
         team2Id = predictions[match.team2PrevMatchId] ?? autoWinners[match.team2PrevMatchId] ?? match.team2Id;
       }
 
