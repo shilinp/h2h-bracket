@@ -6,20 +6,13 @@
     interface Props {
         match: Match;
         selected: number | undefined;
-        masterWinner: number | undefined;
         teamNames: Record<number, string>;
         isLocked: boolean;
         isActiveMatch: boolean;
     }
 
-    let {
-        match,
-        selected,
-        masterWinner,
-        teamNames,
-        isLocked,
-        isActiveMatch,
-    }: Props = $props();
+    let { match, selected, teamNames, isLocked, isActiveMatch }: Props =
+        $props();
 </script>
 
 <div
@@ -37,13 +30,7 @@
     >
         <div class="team-identity">
             <MatchIcon teamId={match.team1Id} sizePx={24} />
-            <span
-                class="team-name"
-                class:strikethrough={isLocked &&
-                    masterWinner != null &&
-                    selected === match.team1Id &&
-                    selected !== masterWinner}
-            >
+            <span class="team-name">
                 {match.team1Id != null
                     ? (teamNames[match.team1Id] ?? "TBD")
                     : "TBD"}
@@ -75,13 +62,7 @@
     >
         <div class="team-identity">
             <MatchIcon teamId={match.team2Id} sizePx={24} />
-            <span
-                class="team-name"
-                class:strikethrough={isLocked &&
-                    masterWinner != null &&
-                    selected === match.team2Id &&
-                    selected !== masterWinner}
-            >
+            <span class="team-name">
                 {match.team2Id != null
                     ? (teamNames[match.team2Id] ?? "TBD")
                     : "TBD"}
@@ -102,12 +83,6 @@
             {/if}
         </div>
     </div>
-
-    {#if isLocked && masterWinner != null && selected !== masterWinner}
-        <div class="master-override">
-            Correct: {teamNames[masterWinner] ?? "TBD"}
-        </div>
-    {/if}
 </div>
 
 <style>
@@ -126,7 +101,7 @@
     .match-card.active-match {
         border: 2px solid var(--dark-navy-blue);
 
-        box-shadow: 0 8px 24px rgba(14, 23, 43, 0.12);
+        box-shadow: 2px 3px 25px 0px rgba(0, 0, 0, 0.17);
     }
     .team-row {
         display: flex;
@@ -160,24 +135,11 @@
         font-size: 0.9375rem;
         font-weight: 500;
     }
-    .team-name.strikethrough {
-        text-decoration: line-through;
-        opacity: 0.5;
-    }
     .status-indicator {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 24px;
         height: 24px;
-    }
-    .master-override {
-        background: rgba(239, 68, 68, 0.08);
-        color: #ef4444;
-        font-size: 0.8rem;
-        text-align: center;
-        padding: 8px;
-        font-weight: 600;
-        border-top: 1px solid rgba(239, 68, 68, 0.1);
     }
 </style>

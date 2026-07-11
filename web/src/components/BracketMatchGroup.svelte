@@ -11,13 +11,15 @@
         activeRoundIndex: number;
         matchesInView: number;
         selected: number | undefined;
-        masterWinner: number | undefined;
         computedLineHeight: number;
         isActiveMatch: boolean;
         isLocked: boolean;
         gapWidth: number;
         teamNames: Record<number, string>;
-        registerMatch: (node: HTMLElement, matchId: number) => { destroy: () => void };
+        registerMatch: (
+            node: HTMLElement,
+            matchId: number,
+        ) => { destroy: () => void };
     }
 
     let {
@@ -28,27 +30,26 @@
         activeRoundIndex,
         matchesInView,
         selected,
-        masterWinner,
         computedLineHeight,
         isActiveMatch,
         isLocked,
         gapWidth,
         teamNames,
-        registerMatch
+        registerMatch,
     }: Props = $props();
 </script>
 
 <div
     class="match-wrapper"
-    class:out-of-scroll-bounds={roundIndex !== activeRoundIndex && matchIdx >= matchesInView}
-    class:active-match={isActiveMatch} 
+    class:out-of-scroll-bounds={roundIndex !== activeRoundIndex &&
+        matchIdx >= matchesInView}
+    class:active-match={isActiveMatch}
     use:registerMatch={match.matchId}
 >
     <div class="match-container">
         <BracketMatchCard
             {match}
             {selected}
-            {masterWinner}
             {teamNames}
             {isLocked}
             {isActiveMatch}
@@ -56,24 +57,24 @@
     </div>
 
     {#if roundIndex < totalRounds - 1}
-    <BracketConnector
-        type={roundIndex > 0 ? "both" : "outgoing"}
-        isEven={matchIdx % 2 === 0}
-        lineHeight={computedLineHeight}
-        gapWidth={gapWidth}
-        {isActiveMatch}
-        {roundIndex}
-        {activeRoundIndex}
-    />
-{:else if roundIndex > 0}
-    <BracketConnector
-        type="incoming"
-        gapWidth={gapWidth}
-        {isActiveMatch}
-        {roundIndex}
-        {activeRoundIndex}
-    />
-{/if}
+        <BracketConnector
+            type={roundIndex > 0 ? "both" : "outgoing"}
+            isEven={matchIdx % 2 === 0}
+            lineHeight={computedLineHeight}
+            {gapWidth}
+            {isActiveMatch}
+            {roundIndex}
+            {activeRoundIndex}
+        />
+    {:else if roundIndex > 0}
+        <BracketConnector
+            type="incoming"
+            {gapWidth}
+            {isActiveMatch}
+            {roundIndex}
+            {activeRoundIndex}
+        />
+    {/if}
 </div>
 
 <style>
@@ -87,7 +88,7 @@
         flex: 1;
         flex-direction: column;
         justify-content: center;
-        min-height: 140px; 
+        min-height: 140px;
     }
 
     .match-container {

@@ -8,7 +8,6 @@
         rounds: { round: number; matches: Match[] }[];
         predictions: Record<number, number>;
         teamNames: Record<number, string>;
-        masterPredictions: Record<number, number>;
         matchPositions?: Record<number, MatchPosition>;
         isLocked: boolean;
         activeMatchId: number | null;
@@ -18,17 +17,16 @@
         rounds = [],
         predictions = {},
         teamNames = {},
-        masterPredictions = {},
         isLocked = false,
         activeMatchId = null,
     }: Props = $props();
 
     // 1. Horizontal gap between rounds: 2rem = 32px
-    const GAP_WIDTH = 32; 
-    
+    const GAP_WIDTH = 32;
+
     // 2. Decreasing this from 140px brings the matches vertically closer together
     // while keeping the canvas connector logic perfectly aligned.
-    const BASE_MATCH_HEIGHT = 120; 
+    const BASE_MATCH_HEIGHT = 120;
 
     let activeRoundIndex = $state(0);
     let matchElements = $state<Record<number, HTMLElement>>({});
@@ -90,7 +88,7 @@
                     const columnEl = bracketContent?.children[
                         roundIdx
                     ] as HTMLElement;
-                
+
                     const elRect = el.getBoundingClientRect();
                     const viewRect = scrollContainer.getBoundingClientRect();
 
@@ -182,7 +180,6 @@
                                 {activeRoundIndex}
                                 {matchesInView}
                                 selected={predictions[match.matchId]}
-                                masterWinner={masterPredictions[match.matchId]}
                                 computedLineHeight={calculateConnectorHeight(
                                     i,
                                     matchesInView,
@@ -213,16 +210,14 @@
         padding-left: 1rem;
         width: 100%;
         height: 100%;
-        min-height: 80vh;
         overflow: hidden;
+        box-sizing: border-box;
+        gap: 1rem;
     }
     .bracket-viewport {
         flex: 1;
         overflow-x: hidden;
         overflow-y: auto;
-
-        margin: 1rem 0px 0px 0px;
-
         position: relative;
         scroll-behavior: smooth;
     }
@@ -240,7 +235,6 @@
         flex-shrink: 0;
         overflow: visible;
     }
-    /* Strictly locks the outer boundary box height to match the mathematical grid */
     .match-wrapper {
         display: flex;
         align-items: center;

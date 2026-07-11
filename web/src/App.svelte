@@ -90,7 +90,6 @@
           rounds={groupedMatches}
           predictions={bracketState.predictions}
           teamNames={bracketState.teamNames}
-          masterPredictions={bracketState.masterPredictions}
           matchPositions={bracketState.matchPositions}
           isLocked={bracketState.isLocked}
           activeMatchId={currentMatch?.matchId ?? null}

@@ -179,7 +179,6 @@
                     rounds={groupedMatches}
                     teamNames={bracketState.teamNames}
                     predictions={{}}
-                    masterPredictions={{}}
                     isLocked={false}
                     activeMatchId={null}
                 />
