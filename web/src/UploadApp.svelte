@@ -92,7 +92,7 @@
     }
 
     onMount(async () => {
-        await fetchBracketState.fetchBracket("", true)
+        await fetchBracketState.fetchBracket("", true);
         state.view = "preview";
     });
 </script>
@@ -102,7 +102,9 @@
         <h1 class="title">🏆 Tournament Setup</h1>
 
         {#if fetchBracketState.isInProgress}
-            <div class="loading-msg">Loading existing tournament...</div>
+            <div class="center-flow text-muted">
+                Loading existing tournament...
+            </div>
         {:else if state.view === "upload"}
             <div class="section-card">
                 <h2 class="section-title">Add Teams</h2>
@@ -137,7 +139,8 @@
                                 <button
                                     onclick={() => removeTeam(i)}
                                     class="btn-remove"
-                                    disabled={submitTeamsState.isInProgress}>✕</button
+                                    disabled={submitTeamsState.isInProgress}
+                                    >✕</button
                                 >
                             </div>
                         {/each}
@@ -162,7 +165,8 @@
 
             <button
                 onclick={submitUpload}
-                disabled={submitTeamsState.isInProgress || state.pendingTeams.length < 2}
+                disabled={submitTeamsState.isInProgress ||
+                    state.pendingTeams.length < 2}
                 class="btn-primary"
             >
                 {submitTeamsState.isInProgress
@@ -170,7 +174,7 @@
                     : `Upload Tournament (${state.pendingTeams.length} teams)`}
             </button>
         {:else}
-            <div class="section-card preview-card">
+            <div class="bracket-container preview-card">
                 <BracketPreview
                     rounds={groupedMatches}
                     teamNames={bracketState.teamNames}
@@ -211,51 +215,76 @@
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             sans-serif;
-        background-color: #0b0f19;
-        color: #f1f5f9;
-        overflow-y: auto;
+        background-color: var(--bracket-background);
+
+        overflow: hidden;
     }
 
     .mobile-viewport {
+        width: 100vw;
         max-width: 440px;
         margin: 0 auto;
-        min-height: 100vh;
+        height: 100dvh;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     .upload-page {
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        padding: 24px 16px 40px;
+        height: 100%;
+        overflow: hidden;
+        gap: 12px;
+        padding: 1rem;
+        box-sizing: border-box;
     }
 
     .title {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
         font-weight: 800;
         margin: 0;
         text-align: center;
+        flex-shrink: 0;
+        color: #1e293b;
     }
 
-    .loading-msg {
-        color: #94a3b8;
+    .center-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         text-align: center;
-        padding: 40px 0;
+        height: 100%;
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+    .text-muted {
+        color: #94a3b8;
     }
 
     .section-card {
         background: #1e293b;
         border-radius: 20px;
-        padding: 20px;
+        padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 12px;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .bracket-container {
+        flex: 1;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .preview-card {
-        padding: 0;
         background: transparent;
     }
 
@@ -263,12 +292,14 @@
         font-size: 1.1rem;
         font-weight: 700;
         margin: 0;
+        flex-shrink: 0;
     }
 
     .section-hint {
         font-size: 0.85rem;
         color: #94a3b8;
         margin: 0;
+        flex-shrink: 0;
     }
 
     .form-input {
@@ -296,13 +327,14 @@
         display: flex;
         gap: 8px;
         align-items: center;
+        flex-shrink: 0;
     }
 
     .team-list {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: 280px;
+        flex: 1;
         overflow-y: auto;
     }
 
@@ -325,27 +357,29 @@
         color: #475569;
         font-size: 0.85rem;
         text-align: center;
-        margin: 8px 0 0;
+        margin: auto 0;
     }
 
     .warning-box {
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.25);
         border-radius: 12px;
-        padding: 12px 16px;
-        font-size: 0.85rem;
+        padding: 10px 14px;
+        font-size: 0.8rem;
         color: #fcd34d;
-        line-height: 1.5;
+        line-height: 1.4;
+        flex-shrink: 0;
     }
 
     .status-msg {
-        padding: 11px 16px;
+        padding: 10px 14px;
         border-radius: 12px;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         text-align: center;
         background: rgba(34, 197, 94, 0.1);
         border: 1px solid rgba(34, 197, 94, 0.25);
         color: #86efac;
+        flex-shrink: 0;
     }
 
     .status-msg.error {
@@ -365,6 +399,7 @@
         cursor: pointer;
         transition: all 0.2s;
         width: 100%;
+        flex-shrink: 0;
     }
 
     .btn-primary:hover:not(:disabled) {
@@ -454,6 +489,7 @@
         display: flex;
         gap: 10px;
         align-items: stretch;
+        flex-shrink: 0;
     }
 
     .flex-1 {

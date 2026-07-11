@@ -8,6 +8,7 @@
     import BracketPreview from "./components/BracketPreview.svelte";
     import MatchPicker from "./components/MatchPicker.svelte";
     import AccuracyPanel from "./components/AccuracyPanel.svelte";
+    import BreadLoader from "./components/BreadLoader.svelte";
     import {
         FetchBracketResponse,
         SubmitBracketRequest,
@@ -59,8 +60,8 @@
 
 <main class="mobile-viewport">
     {#if fetchBracketState.isInProgress}
-        <div class="center-flow text-muted">
-            Parsing match matrix architecture...
+        <div class="center-flow">
+            <BreadLoader showText={true} size={180} />
         </div>
     {:else}
         <div class="bracket-page">
@@ -82,14 +83,7 @@
 
             <div class="bottom-panel">
                 {#if bracketState.isLocked}
-                    <AccuracyPanel
-                        accuracy={bracketState.accuracy}
-                        isSubmitting={submitBracketState.isInProgress ||
-                            deleteBracketState.isInProgress}
-                        onreset={() => {
-                            location.reload();
-                        }}
-                    />
+                    <AccuracyPanel accuracy={bracketState.accuracy} />
                 {:else}
                     <MatchPicker
                         {currentMatch}
@@ -114,10 +108,7 @@
 <style>
     :global(body) {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            sans-serif;
-        background-color: #0b0f19;
-        color: #f1f5f9;
+        background-color: var(--bracket-background);
         overflow: hidden;
     }
 
@@ -143,17 +134,13 @@
         box-sizing: border-box;
     }
 
-    .text-muted {
-        color: #94a3b8;
-    }
-
     .bracket-page {
         display: flex;
         flex-direction: column;
         height: 100%;
         overflow: hidden;
         gap: 12px;
-        padding: 12px;
+        padding: 1rem;
         box-sizing: border-box;
     }
 

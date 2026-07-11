@@ -33,7 +33,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-family, sans-serif);
         width: var(--size);
         text-align: center;
     }
@@ -62,7 +61,7 @@
    * We draw a solid line for 175, and leave the remaining 76.3 as a gap.
   */
     .track {
-        stroke: var(--dark-navy-blue, #121a2f);
+        stroke: var(--dark-navy-blue);
         stroke-dasharray: 175 76.3;
         stroke-dashoffset: 0;
     }
@@ -72,7 +71,7 @@
    * of the dark track's gap without needing any finicky transform rotations.
   */
     .indicator {
-        stroke: var(--neon-yellow-lime, #a3d11a);
+        stroke: var(--neon-yellow-lime);
         stroke-dasharray: 45 206.3;
         /* Track length (175) + half of the remaining space for the first gap (15.6) = 190.6 */
         stroke-dashoffset: -190.6;
@@ -99,10 +98,9 @@
         margin-top: 1rem;
         font-size: 1.25rem;
         font-weight: 500;
-        color: var(--dark-navy-blue, #121a2f);
+        color: var(--dark-navy-blue);
     }
 
-    /* Smooth, continuous rotation */
     @keyframes spin {
         0% {
             transform: rotate(0deg);

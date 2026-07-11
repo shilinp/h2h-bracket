@@ -35,7 +35,7 @@
 <style>
     .tabs-container {
         display: flex;
-        gap: 8px;
+        gap: 0.5rem;
         overflow-x: auto;
         scrollbar-width: none;
         flex-shrink: 0;
@@ -47,8 +47,8 @@
         display: none;
     }
     .tab {
-        background: #D4D4D4;
-        color: #74777E;
+        background: var(--pill-background-inactive);
+        color: var(--pill-content-inactive);
         border: none;
         padding: 10px 20px;
         border-radius: 100px;
@@ -60,6 +60,6 @@
     }
     .tab.active {
         background: var(--dark-navy-blue);
-        color: var(--white);
+        color: #ffffff;
     }
 </style>

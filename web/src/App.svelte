@@ -101,10 +101,6 @@
         {#if bracketState.isLocked}
           <AccuracyPanel
             accuracy={bracketState.accuracy}
-            isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
-            onreset={() => {
-              location.reload();
-            }}
           />
         {:else}
           <MatchPicker
@@ -126,8 +122,7 @@
 <style>
   :global(body) {
     margin: 0;
-    background-color: #FAF9F6;
-    color: #f1f5f9;
+    background-color: var(--bracket-background);
     overflow: hidden;
   }
 

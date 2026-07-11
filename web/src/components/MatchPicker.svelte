@@ -96,7 +96,7 @@
                 <span class="picker-empty-text"
                     >We got your submission big dawg, good luck &lt;3</span
                 >
-                <img src="/cool-guy-sandwich.svg" alt=""/> 
+                <img src="/cool-guy-sandwich.svg" alt="" class="cool-guy"/> 
                 <button class="btn-reset" onclick={onreset}> Reset </button>
             {:else}
                 <span class="picker-empty-text">Locked in?</span>
@@ -187,6 +187,8 @@
         box-sizing: border-box;
         width: 100%;
         height: 100%;
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
 
     .picker-empty-text {
@@ -228,5 +230,9 @@
         justify-content: center;
         width: 100%;
         height: 100%;
+    }
+
+    .cool-guy {
+        padding-bottom: 1rem
     }
 </style>

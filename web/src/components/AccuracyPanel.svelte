@@ -1,66 +1,55 @@
 <script lang="ts">
     interface Props {
         accuracy: number | null;
-        isSubmitting: boolean;
-        onreset: () => void;
     }
 
-    let { accuracy = null, isSubmitting = false, onreset }: Props = $props();
+    let { accuracy = null }: Props = $props();
 </script>
 
 <div class="accuracy-panel">
-    <div class="score-card">
-        <span class="lock-icon">🔒</span>
-        <h2>Submissions Locked</h2>
-        <p>Matches are already underway. Modifications are suspended.</p>
-        {#if accuracy !== null}
-            <p class="accuracy-score">
-                Prediction Score: {accuracy.toFixed(2)}%
-            </p>
-        {/if}
-    </div>
+    <span class="title">The results are in...</span>
+
+    {#if accuracy !== null}
+        <span class="subtitle"
+            >You got a {accuracy.toFixed(1)}% match with Miranda. Thanks for
+            playing :&rpar;</span
+        >
+    {:else}
+        <span class="subtitle">You didn't submit any guesses!</span>
+    {/if}
+    <img src="/fish-sandwich.svg" alt="" />
 </div>
 
 <style>
     .accuracy-panel {
-        background: #1e293b;
-        border-radius: 28px;
-        width: 100%;
+        text-align: center;
+        color: var(--dark-navy-blue);
+        font-size: 1rem;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 220px;
-    }
-
-    .score-card {
-        display: flex;
-        padding: 24px;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
+        justify-content: center;
+        gap: 1rem;
+        box-sizing: border-box;
         width: 100%;
-        max-width: 420px;
-        text-align: center;
+        height: 100%;
+
+        aspect-ratio: 1.5 / 1;
+
+        border: 1px solid var(--match-picker-container-border);
+        border-radius: 20px;
+        padding: 1.5rem 2rem 1.5rem 2rem;
     }
 
-    .lock-icon {
-        font-size: 2rem;
+    .title {
+        color: var(--dark-navy-blue);
+        font-weight: 500;
+        font-size: 1rem;
     }
 
-    h2 {
-        margin: 0;
-        font-size: 1.4rem;
-    }
-
-    p {
-        color: #cbd5e1;
-        margin: 0;
-    }
-
-    .accuracy-score {
-        margin-top: 8px;
-        color: #d1fae5;
-        font-size: 1.05rem;
+    .subtitle {
+        color: var(--dark-navy-blue);
         font-weight: 700;
+        font-size: 1rem;
     }
 </style>
