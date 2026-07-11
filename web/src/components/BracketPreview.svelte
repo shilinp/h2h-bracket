@@ -64,11 +64,11 @@
             const roundIdx = rounds.findIndex((r) =>
                 r.matches.some((m) => m.matchId === activeMatchId),
             );
-            
+
             if (roundIdx !== -1) {
                 // 1. Check if we are actually advancing to a new column
                 const isChangingRounds = activeRoundIndex !== roundIdx;
-                
+
                 const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
                 const isFinalRound = roundIdx === rounds.length - 1;
 
@@ -85,13 +85,17 @@
                 tick().then(() => {
                     if (!scrollContainer) return;
                     const el = matchElements[activeMatchId!];
-                    
+
                     if (el) {
-                        const bracketContent = scrollContainer.querySelector(".bracket-content");
-                        const columnEl = bracketContent?.children[roundIdx] as HTMLElement;
+                        const bracketContent =
+                            scrollContainer.querySelector(".bracket-content");
+                        const columnEl = bracketContent?.children[
+                            roundIdx
+                        ] as HTMLElement;
 
                         const elRect = el.getBoundingClientRect();
-                        const viewRect = scrollContainer.getBoundingClientRect();
+                        const viewRect =
+                            scrollContainer.getBoundingClientRect();
 
                         const scrollTop =
                             scrollContainer.scrollTop +
@@ -111,7 +115,7 @@
                         } else {
                             // Same round: Force the X-axis instantly to counter Safari's layout reset,
                             // and only apply smooth scrolling to the Y-axis.
-                            scrollContainer.scrollLeft = targetLeft; 
+                            scrollContainer.scrollLeft = targetLeft;
                             scrollContainer.scrollTo({
                                 top: scrollTop,
                                 behavior: "smooth",
@@ -185,36 +189,39 @@
             isUserNavigating = true;
         }}
     >
-        <div
-            class="bracket-content"
-            style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
-        >
-            {#each rounds as group, i}
-                <div class="round-column">
-                    {#each group.matches as match, matchIdx}
-                        <div class="match-wrapper">
-                            <BracketMatchGroup
-                                {match}
-                                {matchIdx}
-                                roundIndex={i}
-                                totalRounds={rounds.length}
-                                {activeRoundIndex}
-                                {matchesInView}
-                                selected={predictions[match.matchId]}
-                                computedLineHeight={calculateConnectorHeight(
-                                    i,
-                                    matchesInView,
-                                )}
-                                isActiveMatch={activeMatchId === match.matchId}
-                                {isLocked}
-                                gapWidth={GAP_WIDTH}
-                                {teamNames}
-                                {registerMatch}
-                            />
-                        </div>
-                    {/each}
-                </div>
-            {/each}
+        <div class="bracket-wrapper">
+            <div
+                class="bracket-content"
+                style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
+            >
+                {#each rounds as group, i}
+                    <div class="round-column">
+                        {#each group.matches as match, matchIdx}
+                            <div class="match-wrapper">
+                                <BracketMatchGroup
+                                    {match}
+                                    {matchIdx}
+                                    roundIndex={i}
+                                    totalRounds={rounds.length}
+                                    {activeRoundIndex}
+                                    {matchesInView}
+                                    selected={predictions[match.matchId]}
+                                    computedLineHeight={calculateConnectorHeight(
+                                        i,
+                                        matchesInView,
+                                    )}
+                                    isActiveMatch={activeMatchId ===
+                                        match.matchId}
+                                    {isLocked}
+                                    gapWidth={GAP_WIDTH}
+                                    {teamNames}
+                                    {registerMatch}
+                                />
+                            </div>
+                        {/each}
+                    </div>
+                {/each}
+            </div>
         </div>
     </div>
 </div>
@@ -235,11 +242,20 @@
         box-sizing: border-box;
         gap: 1rem;
     }
-    .bracket-viewport {
+   .bracket-viewport {
         flex: 1;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: auto;
         position: relative;
+        /* Force hardware acceleration to keep scroll position stable */
+        -webkit-overflow-scrolling: touch; 
+        transform: translateZ(0); 
+    }
+    
+    .bracket-wrapper {
+        /* Ensure this container is exactly as large as the content */
+        display: inline-block;
+        min-width: 100%;
+        padding-bottom: 20px; /* Prevent bottom bounce clipping */
     }
     .bracket-content {
         display: flex;
