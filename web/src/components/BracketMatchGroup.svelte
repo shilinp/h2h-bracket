@@ -85,10 +85,9 @@
         position: relative;
         width: 100%;
         display: flex;
-        flex: 1;
         flex-direction: column;
         justify-content: center;
-        min-height: 140px;
+        height: 100%; 
     }
 
     .match-container {

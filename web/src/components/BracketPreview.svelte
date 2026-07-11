@@ -230,6 +230,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-around;
+        width: 17.5rem;
         min-width: 280px;
         height: 100%;
         flex-shrink: 0;

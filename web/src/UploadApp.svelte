@@ -215,7 +215,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             sans-serif;
         background-color: var(--bracket-background);
-
+        color: #ffffff;
         overflow: hidden;
     }
 

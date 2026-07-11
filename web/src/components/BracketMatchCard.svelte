@@ -116,6 +116,7 @@
     .team-row {
         display: flex;
         justify-content: space-between;
+        gap: 1rem;
         align-items: center;
         padding: 0.75rem;
         background: #ffffff;
@@ -139,11 +140,20 @@
     .team-identity {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 1rem;
+        flex: 1; 
+        min-width: 0; 
     }
     .team-name {
-        font-size: 0.9375rem;
+        font-size: 1rem;
         font-weight: 500;
+        text-overflow: ellipsis;
+        text-align: left;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden; 
+        word-break: break-word; 
     }
     .status-indicator {
         display: flex;
