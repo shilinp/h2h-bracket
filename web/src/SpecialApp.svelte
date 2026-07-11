@@ -135,7 +135,7 @@
         height: 100%;
         overflow: hidden;
         gap: 12px;
-        padding: 1rem;
+        padding: 1rem 1rem 0.5rem 1rem;
         box-sizing: border-box;
     }
 

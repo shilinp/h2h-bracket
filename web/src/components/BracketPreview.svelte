@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { tick } from "svelte";
+    import { tick, untrack } from "svelte";
     import type { Match, MatchPosition } from "../lib/proto/bracket";
     import BracketTabs from "./BracketTabs.svelte";
     import BracketMatchGroup from "./BracketMatchGroup.svelte";
@@ -110,7 +110,9 @@
 
     $effect(() => {
         if (activeMatchId !== null && !isUserNavigating) {
-            focusActiveMatch();
+            untrack(() => {
+                focusActiveMatch();
+            });
         }
     });
 
@@ -159,10 +161,14 @@
 <div class="bracket-app">
     <BracketTabs {rounds} {activeRoundIndex} onSelectRound={selectRound} />
 
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         class="bracket-viewport"
         bind:this={scrollContainer}
         onscrollend={handleScrollEnd}
+        ontouchstart={() => {
+            isUserNavigating = true;
+        }}
     >
         <div
             class="bracket-content"
