@@ -189,39 +189,36 @@
             isUserNavigating = true;
         }}
     >
-        <div class="bracket-wrapper">
-            <div
-                class="bracket-content"
-                style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
-            >
-                {#each rounds as group, i}
-                    <div class="round-column">
-                        {#each group.matches as match, matchIdx}
-                            <div class="match-wrapper">
-                                <BracketMatchGroup
-                                    {match}
-                                    {matchIdx}
-                                    roundIndex={i}
-                                    totalRounds={rounds.length}
-                                    {activeRoundIndex}
-                                    {matchesInView}
-                                    selected={predictions[match.matchId]}
-                                    computedLineHeight={calculateConnectorHeight(
-                                        i,
-                                        matchesInView,
-                                    )}
-                                    isActiveMatch={activeMatchId ===
-                                        match.matchId}
-                                    {isLocked}
-                                    gapWidth={GAP_WIDTH}
-                                    {teamNames}
-                                    {registerMatch}
-                                />
-                            </div>
-                        {/each}
-                    </div>
-                {/each}
-            </div>
+        <div
+            class="bracket-content"
+            style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
+        >
+            {#each rounds as group, i}
+                <div class="round-column">
+                    {#each group.matches as match, matchIdx}
+                        <div class="match-wrapper">
+                            <BracketMatchGroup
+                                {match}
+                                {matchIdx}
+                                roundIndex={i}
+                                totalRounds={rounds.length}
+                                {activeRoundIndex}
+                                {matchesInView}
+                                selected={predictions[match.matchId]}
+                                computedLineHeight={calculateConnectorHeight(
+                                    i,
+                                    matchesInView,
+                                )}
+                                isActiveMatch={activeMatchId === match.matchId}
+                                {isLocked}
+                                gapWidth={GAP_WIDTH}
+                                {teamNames}
+                                {registerMatch}
+                            />
+                        </div>
+                    {/each}
+                </div>
+            {/each}
         </div>
     </div>
 </div>
@@ -244,20 +241,11 @@
     }
     .bracket-viewport {
         flex: 1;
-        overflow-y: auto; /* Keep vertical scrolling */
-        overflow-x: hidden; /* Explicitly hide horizontal overflow */
-        overscroll-behavior-x: none; /* Prevents manual horizontal panning/swiping */
+        overflow-x: hidden;
+        overflow-y: auto;
         position: relative;
-        /* Force hardware acceleration to keep scroll position stable */
         -webkit-overflow-scrolling: touch;
-        transform: translateZ(0);
-    }
-
-    .bracket-wrapper {
-        /* Ensure this container is exactly as large as the content */
-        display: inline-block;
-        min-width: 100%;
-        padding-bottom: 20px; /* Prevent bottom bounce clipping */
+        touch-action: pan-y;
     }
     .bracket-content {
         display: flex;

@@ -126,7 +126,7 @@
   }
 
   .mobile-viewport {
-    width: 100vw;
+    width: 100dvw;
     max-width: 440px;
     margin: 0 auto;
     height: 100dvh;
