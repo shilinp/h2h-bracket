@@ -1,39 +1,47 @@
 <script lang="ts">
-    import type { Match } from '../lib/proto/bracket';
+    import type { Match } from "../lib/proto/bracket";
+    import BreadLoader from "./BreadLoader.svelte";
     import MatchIcon from "./MatchIcon.svelte";
 
     interface Props {
         currentMatch?: (Match & { roundNumber?: number }) | null;
         teamNames?: Record<number, string>;
-        remainingCount?: number;
         isSubmitting?: boolean;
+        hasPersistedBracket: boolean;
         onselect: (event: { matchId: number; winnerId: number }) => void;
         onsubmit: () => void;
         onreset: () => void;
     }
 
-    let { 
-        currentMatch = null, 
+    let {
+        currentMatch = null,
         teamNames = {},
-        remainingCount = 0, 
         isSubmitting = false,
+        hasPersistedBracket,
         onselect,
         onsubmit,
-        onreset
+        onreset,
     }: Props = $props();
 
-    // Track the currently clicked team for the 50ms delay
     let activeTeamId: number | null = $state(null);
+    let submittingDelay: boolean = $state(false);
 
-    // Wrapper function to handle the delay and visual state
     function handleSelect(teamId: number | undefined | null) {
         if (!currentMatch || teamId == null || isSubmitting) return;
-        
+
         activeTeamId = teamId;
 
         setTimeout(() => {
             activeTeamId = null;
             chooseWinner(teamId);
+        }, 100);
+    }
+
+    function handleSubmit() {
+        submittingDelay = true;
+        setTimeout(() => {
+            submittingDelay = false;
+            onsubmit();
         }, 100);
     }
 
@@ -49,34 +57,56 @@
 
         <div class="choice-row">
             <button
-                class="choice-pane {activeTeamId === currentMatch.team1Id ? 'active' : ''}"
+                class="choice-pane {activeTeamId === currentMatch.team1Id
+                    ? 'active'
+                    : ''}"
                 onclick={() => handleSelect(currentMatch.team1Id)}
                 disabled={isSubmitting}
             >
-                <MatchIcon teamId={currentMatch.team1Id} sizePx={48}/>
-                <span class="team-name">{currentMatch.team1Id != null ? (teamNames[currentMatch.team1Id] ?? 'TBD') : 'TBD'}</span>
+                <MatchIcon teamId={currentMatch.team1Id} sizePx={48} />
+                <span class="team-name"
+                    >{currentMatch.team1Id != null
+                        ? (teamNames[currentMatch.team1Id] ?? "TBD")
+                        : "TBD"}</span
+                >
             </button>
 
             <button
-                class="choice-pane {activeTeamId === currentMatch.team2Id ? 'active' : ''}"
+                class="choice-pane {activeTeamId === currentMatch.team2Id
+                    ? 'active'
+                    : ''}"
                 onclick={() => handleSelect(currentMatch.team2Id)}
                 disabled={isSubmitting}
             >
                 <MatchIcon teamId={currentMatch.team2Id} sizePx={48} />
-                <span class="team-name">{currentMatch.team2Id != null ? (teamNames[currentMatch.team2Id] ?? 'TBD') : 'TBD'}</span>
+                <span class="team-name"
+                    >{currentMatch.team2Id != null
+                        ? (teamNames[currentMatch.team2Id] ?? "TBD")
+                        : "TBD"}</span
+                >
             </button>
+        </div>
+    {:else if isSubmitting}
+        <div class="loader-container">
+            <BreadLoader showText={false} size={180} />
         </div>
     {:else}
         <div class="picker-empty">
-            <span class="success-icon">🎉</span>
-            <h2>Bracket Generated!</h2>
-            <p>Your comparative evaluations are complete. Lock it into the database?</p>
-            <button class="btn-primary" onclick={onsubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Transmitting to Go Core...' : 'Lock Submission'}
-            </button>
-            <button class="btn-text" onclick={onreset} disabled={isSubmitting}>
-                Wipe Local Progress & Restart
-            </button>
+            {#if hasPersistedBracket}
+                <span class="picker-empty-text"
+                    >We got your submission big dawg, good luck &lt;3</span
+                >
+                <img src="/cool-guy-sandwich.svg" alt=""/> 
+                <button class="btn-reset" onclick={onreset}> Reset </button>
+            {:else}
+                <span class="picker-empty-text">Locked in?</span>
+                <button
+                    class="btn-submit {submittingDelay ? 'clicked' : ''}"
+                    onclick={handleSubmit}
+                    >Submit Your Bracket
+                </button>
+                <button class="btn-reset" onclick={onreset}> Reset </button>
+            {/if}
         </div>
     {/if}
 </div>
@@ -128,13 +158,15 @@
         font-weight: 500;
         padding: 1rem;
         box-sizing: border-box;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
     }
 
     .choice-pane.active {
         background: var(--neon-yellow-lime);
         border-color: var(--dark-navy-blue);
-        transition: none; 
+        transform: scale(0.98);
     }
 
     .team-name {
@@ -146,65 +178,55 @@
     }
 
     .picker-empty {
-        background: #ffffff;
-        border-radius: 28px;
-        padding: 24px;
         text-align: center;
-        color: #0f172a;
+        color: var(--dark-navy-blue);
+        font-size: 1rem;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: 12px;
         align-items: center;
         box-sizing: border-box;
         width: 100%;
         height: 100%;
     }
 
-    .success-icon {
-        font-size: 2.2rem;
+    .picker-empty-text {
+        margin-top: auto;
+        margin-bottom: 1rem;
     }
 
-    .picker-empty h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-    }
-
-    .picker-empty p {
-        color: #475569;
-        margin: 0;
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
-
-    .btn-primary {
-        width: 100%;
-        max-width: 280px;
-        background: #0f172a;
+    .btn-submit {
+        background: var(--dark-navy-blue);
         color: white;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 999px;
         border: none;
-        padding: 12px;
-        border-radius: 14px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: background 0.15s;
+        font-size: 1rem;
+        transition: transform 0.1s ease;
+        font-family: var(--sans);
     }
 
-    .btn-text {
+    .btn-submit.clicked {
+        background: var(--neon-yellow-lime);
+        color: var(--dark-navy-blue);
+        transform: scale(0.98);
+    }
+
+    .btn-reset {
         background: transparent;
         border: none;
-        color: #ef4444;
+        color: var(--dark-navy-blue);
         font-weight: 500;
-        font-size: 0.85rem;
-        cursor: pointer;
-        text-decoration: underline;
+        font-size: 1rem;
+        margin-top: auto;
+        margin-bottom: 0;
     }
 
-    .btn-primary:disabled,
-    .btn-text:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+    .loader-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
     }
 </style>

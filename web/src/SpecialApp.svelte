@@ -94,7 +94,7 @@
                     <MatchPicker
                         {currentMatch}
                         teamNames={bracketState.teamNames}
-                        remainingCount={playableMatches.length}
+                        hasPersistedBracket={bracketState.hasPersistedBracket}
                         isSubmitting={submitBracketState.isInProgress ||
                             deleteBracketState.isInProgress}
                         onselect={(event) =>

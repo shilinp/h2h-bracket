@@ -81,14 +81,10 @@
     <SessionGate bind:username={state.username} onsubmit={handleLogin} />
   {:else if fetchBracketState.isInProgress}
     <div class="center-flow">
-      <BreadLoader size={180} />
+      <BreadLoader showText={true} size={180} />
     </div>
   {:else}
     <div class="bracket-page">
-      {#if state.statusMessage}
-        <div class="status-banner">{state.statusMessage}</div>
-      {/if}
-
       <div class="bracket-container">
         <BracketPreview
           rounds={groupedMatches}
@@ -114,8 +110,8 @@
           <MatchPicker
             {currentMatch}
             teamNames={bracketState.teamNames}
-            remainingCount={playableMatches.length}
             isSubmitting={submitBracketState.isInProgress || deleteBracketState.isInProgress}
+            hasPersistedBracket={bracketState.hasPersistedBracket}
             onselect={(event) =>
               bracketState.selectWinner(event.matchId, event.winnerId)}
             onsubmit={finalizeAndSubmit}
@@ -173,17 +169,6 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-  }
-
-  .status-banner {
-    background: rgba(37, 99, 235, 0.12);
-    border: 1px solid rgba(37, 99, 235, 0.24);
-    color: #c7d2fe;
-    border-radius: 12px;
-    padding: 10px 14px;
-    text-align: center;
-    font-size: 0.9rem;
-    flex-shrink: 0;
   }
 
   .bottom-panel {

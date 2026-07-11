@@ -52,37 +52,14 @@
         <div class="status-indicator">
             {#if match.team1Id != null && selected != null}
                 {#if selected === match.team1Id}
-                    <!-- Trophy Icon for Winner -->
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        width="18"
-                        height="18"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34M12 2a7 7 0 00-7 7c0 2.58 1.4 4.83 3.5 6h7c2.1-1.17 3.5-3.42 3.5-7a7 7 0 00-7-7z"
-                        />
-                    </svg>
+                    <img
+                        src="/trophy-symbol.svg"
+                        alt=""
+                        width="24"
+                        height="24"
+                    />
                 {:else}
-                    <!-- X Icon for Loser -->
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        width="16"
-                        height="16"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
+                    <img src="/x-symbol.svg" alt="" width="24" height="24" />
                 {/if}
             {/if}
         </div>
@@ -113,37 +90,14 @@
         <div class="status-indicator">
             {#if match.team2Id != null && selected != null}
                 {#if selected === match.team2Id}
-                    <!-- Trophy Icon for Winner -->
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        width="18"
-                        height="18"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34M12 2a7 7 0 00-7 7c0 2.58 1.4 4.83 3.5 6h7c2.1-1.17 3.5-3.42 3.5-7a7 7 0 00-7-7z"
-                        />
-                    </svg>
+                    <img
+                        src="/trophy-symbol.svg"
+                        alt=""
+                        width="24"
+                        height="24"
+                    />
                 {:else}
-                    <!-- X Icon for Loser -->
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        width="16"
-                        height="16"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
+                    <img src="/x-symbol.svg" alt="" width="24" height="24" />
                 {/if}
             {/if}
         </div>
@@ -157,8 +111,6 @@
 </div>
 
 <style>
-    /* BracketMatchCard.svelte */
-
     .match-card {
         background: var(--bracket-background);
         border-radius: 12px;
@@ -180,7 +132,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: .75rem;
+        padding: 0.75rem;
         background: #ffffff;
         color: var(--dark-navy-blue);
         transition:
@@ -188,7 +140,7 @@
             color 0.2s ease;
     }
     .team-row:first-child {
-        border-bottom: .1px solid var(--border);
+        border-bottom: 0.1px solid var(--border);
     }
 
     .team-row.winner {
@@ -204,13 +156,6 @@
         align-items: center;
         gap: 14px;
     }
-    /* .team-icon {
-        width: 24px;
-        height: 24px;
-    }
-    .team-row.loser .team-icon {
-        clear: var(--disabled-content);
-    } */
     .team-name {
         font-size: 0.9375rem;
         font-weight: 500;
