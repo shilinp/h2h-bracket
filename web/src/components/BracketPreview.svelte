@@ -80,30 +80,40 @@
             }
 
             tick().then(() => {
-                if (!scrollContainer) return;
-                const el = matchElements[activeMatchId!];
-                if (el) {
-                    const bracketContent =
-                        scrollContainer.querySelector(".bracket-content");
-                    const columnEl = bracketContent?.children[
-                        roundIdx
-                    ] as HTMLElement;
+                requestAnimationFrame(() => {
+                    if (!scrollContainer) return;
+                    const el = matchElements[activeMatchId!];
 
-                    const elRect = el.getBoundingClientRect();
-                    const viewRect = scrollContainer.getBoundingClientRect();
+                    if (el) {
+                        const bracketContent =
+                            scrollContainer.querySelector(".bracket-content");
+                        const columnEl = bracketContent?.children[
+                            roundIdx
+                        ] as HTMLElement;
 
-                    const scrollTop =
-                        scrollContainer.scrollTop +
-                        (elRect.top - viewRect.top) -
-                        viewRect.height / 2 +
-                        elRect.height / 2;
+                        const elRect = el.getBoundingClientRect();
+                        const viewRect =
+                            scrollContainer.getBoundingClientRect();
 
-                    scrollContainer.scrollTo({
-                        left: columnEl?.offsetLeft ?? 0,
-                        top: scrollTop,
-                        behavior: "smooth",
-                    });
-                }
+                        const scrollTop =
+                            scrollContainer.scrollTop +
+                            (elRect.top - viewRect.top) -
+                            viewRect.height / 2 +
+                            elRect.height / 2;
+
+                        const targetLeft = columnEl?.offsetLeft ?? 0;
+                        const currentLeft = scrollContainer.scrollLeft;
+
+                        const needsLeftScroll =
+                            Math.abs(currentLeft - targetLeft) > 5;
+
+                        scrollContainer.scrollTo({
+                            ...(needsLeftScroll && { left: targetLeft }),
+                            top: scrollTop,
+                            behavior: "smooth",
+                        });
+                    }
+                });
             });
         }
     }
@@ -174,9 +184,9 @@
             class="bracket-content"
             style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
         >
-            {#each rounds as group, i (group.round)}
+            {#each rounds as group, i}
                 <div class="round-column">
-                    {#each group.matches as match, matchIdx (match.matchId)}
+                    {#each group.matches as match, matchIdx}
                         <div class="match-wrapper">
                             <BracketMatchGroup
                                 {match}
