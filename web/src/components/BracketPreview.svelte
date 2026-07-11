@@ -32,9 +32,17 @@
     let matchElements = $state<Record<number, HTMLElement>>({});
     let scrollContainer = $state<HTMLElement | null>(null);
     let isUserNavigating = $state(false);
+    let contentOffsetX = $state(0);
 
-    let matchesInView = $state(rounds[0]?.matches.length ?? 1);
+    let matchesInView = $state(1);
     let pendingMatchesInView = $state<number | null>(null);
+
+    $effect(() => {
+        const initialMatchCount = rounds[0]?.matches.length ?? 1;
+        if (matchesInView === 1 && pendingMatchesInView === null) {
+            matchesInView = initialMatchCount;
+        }
+    });
 
     function calculateConnectorHeight(
         roundIndex: number,
@@ -66,9 +74,6 @@
             );
 
             if (roundIdx !== -1) {
-                // 1. Check if we are actually advancing to a new column
-                const isChangingRounds = activeRoundIndex !== roundIdx;
-
                 const targetMatches = rounds[roundIdx]?.matches.length ?? 1;
                 const isFinalRound = roundIdx === rounds.length - 1;
 
@@ -103,24 +108,15 @@
                             viewRect.height / 2 +
                             elRect.height / 2;
 
-                        const targetLeft = columnEl?.offsetLeft ?? 0;
-
-                        if (isChangingRounds) {
-                            // Advancing to a new round: Smoothly sweep horizontally and vertically
-                            scrollContainer.scrollTo({
-                                left: targetLeft,
-                                top: scrollTop,
-                                behavior: "smooth",
-                            });
-                        } else {
-                            // Same round: Force the X-axis instantly to counter Safari's layout reset,
-                            // and only apply smooth scrolling to the Y-axis.
-                            scrollContainer.scrollLeft = targetLeft;
-                            scrollContainer.scrollTo({
-                                top: scrollTop,
-                                behavior: "smooth",
-                            });
+                        if (columnEl) {
+                            contentOffsetX = -columnEl.offsetLeft;
                         }
+
+                        scrollContainer.scrollLeft = 0;
+                        scrollContainer.scrollTo({
+                            top: scrollTop,
+                            behavior: "smooth",
+                        });
                     }
                 });
             }
@@ -154,8 +150,9 @@
                 scrollContainer.querySelector(".bracket-content");
             const columnEl = bracketContent?.children[index] as HTMLElement;
             if (columnEl) {
+                contentOffsetX = -columnEl.offsetLeft;
+                scrollContainer.scrollLeft = 0;
                 scrollContainer.scrollTo({
-                    left: columnEl.offsetLeft,
                     top: 0,
                     behavior: "smooth",
                 });
@@ -191,7 +188,7 @@
     >
         <div
             class="bracket-content"
-            style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; gap: 2rem;"
+            style="--max-matches: {matchesInView}; --match-height: {BASE_MATCH_HEIGHT}px; --content-offset-x: {contentOffsetX}px; gap: 2rem;"
         >
             {#each rounds as group, i}
                 <div class="round-column">
@@ -243,14 +240,20 @@
         flex: 1;
         overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior-x: none;
         position: relative;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
     }
     .bracket-content {
         display: flex;
+        width: fit-content;
         height: calc(var(--max-matches) * var(--match-height));
-        transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        transform: translateX(var(--content-offset-x));
+        transition:
+            transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+            height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        will-change: transform;
     }
     .round-column {
         display: flex;
