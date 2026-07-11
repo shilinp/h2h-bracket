@@ -242,15 +242,17 @@
         box-sizing: border-box;
         gap: 1rem;
     }
-   .bracket-viewport {
+    .bracket-viewport {
         flex: 1;
-        overflow: auto;
+        overflow-y: auto; /* Keep vertical scrolling */
+        overflow-x: hidden; /* Explicitly hide horizontal overflow */
+        overscroll-behavior-x: none; /* Prevents manual horizontal panning/swiping */
         position: relative;
         /* Force hardware acceleration to keep scroll position stable */
-        -webkit-overflow-scrolling: touch; 
-        transform: translateZ(0); 
+        -webkit-overflow-scrolling: touch;
+        transform: translateZ(0);
     }
-    
+
     .bracket-wrapper {
         /* Ensure this container is exactly as large as the content */
         display: inline-block;
